@@ -1,0 +1,4 @@
+application.properties
+persistence.xml
+app/.gitignore
+docs/.gitignore
