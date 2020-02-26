@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "C:\\work\\tools\\apache-tomcat-8.5.50\\webapps\\git\\letter\\app"
+		},
+		{
+			"name": "mgtn3simulator",
+			"path": "."
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.format.settings.url": "eclipse-formatter.xml"
+	}
+}

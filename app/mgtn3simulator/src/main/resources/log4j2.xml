@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">
+            %d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${hostName} --- [%15.15t] %-40.40c{1.} : %m%n%ex
+        </Property>
+        <!-- <Property name="logfile">${log.home}\debug.log</Property> -->
+        <Property name="logfile">C:\work\tools\apache-tomcat-8.5.50\logs\apl\mgtn3simulator\debug.log</Property>
+    </Properties>
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <!-- ファイルに出力する設定 -->
+		<RollingFile name="debugfile" append="true" fileName="${logfile}"
+			filePattern="${logfile-archive}">
+			<PatternLayout>
+				<pattern>${format1}</pattern>
+			</PatternLayout>
+			<Policies>
+				<!-- 100kBに達したらローテーションのファイルを作成する -->
+				<SizeBasedTriggeringPolicy size="100KB"/>
+			</Policies>
+			<!-- ローテーションのファイルの保持数設定。上限を超えたらファイル削除する。 -->
+			<!-- <DefaultRolloverStrategy max="3"/> -->
+		</RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.example.log4j2demo" level="debug" additivity="false">
+            <AppenderRef ref="ConsoleAppender" />
+        </Logger>
+
+        <Root level="debug">
+            <AppenderRef ref="ConsoleAppender" />
+            <AppenderRef ref="debugfile" />
+        </Root>
+    </Loggers>
+</Configuration>
