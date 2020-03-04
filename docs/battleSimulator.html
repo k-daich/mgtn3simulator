@@ -52,7 +52,6 @@
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/jquery-3.4.1.js"></script>
     <script type="text/javascript" src="/mgtn3simulator/js/setToday.js"></script>
-    <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
     <meta charset="utf-8" />
     <title>mgtn3simulator</title>
     <style>
@@ -143,8 +142,8 @@
         <div id="i_total_result" class="c_total_result">
             <table>
                 <tr>
-                    <td><span id="battle_result.count_win"></span><span>勝:</span>
-                        <span id="battle_result.count_lose"></span><span>敗</span></td>
+                    <td><span id="battleResult_count_win"></span><span>勝:</span>
+                        <span id="battleResult_count_lose"></span><span>敗</span></td>
                 </tr>
             </table>
         </div>
@@ -159,14 +158,21 @@
                             <td id="enemy_hp"></td>
                             <td id="enemy_mp"></td>
                         </tr>
-                        <tr class="c_action">
-                            <td id="enemy_skill-0"></td><td id="enemy_skill-select-probability-0"></td>
+                        <tr class="c_status_meter">
+                            <td><meter id="enemy_hp_meter" max="100" valu="10"></meter></td>
+                            <td id="enemy_mp_meter"></td>
                         </tr>
                         <tr class="c_action">
-                            <td id="enemy_skill-1"></td><td id="enemy_skill-select-probability-1"></td>
+                            <td id="enemy_skill-0"></td>
+                            <td id="enemy_skill-select-probability-0"></td>
                         </tr>
                         <tr class="c_action">
-                            <td id="enemy_skill-2"></td><td id="enemy_skill-select-probability-2"></td>
+                            <td id="enemy_skill-1"></td>
+                            <td id="enemy_skill-select-probability-1"></td>
+                        </tr>
+                        <tr class="c_action">
+                            <td id="enemy_skill-2"></td>
+                            <td id="enemy_skill-select-probability-2"></td>
                         </tr>
                     </table>
                 </div>
@@ -184,10 +190,12 @@
                             <td id="ally_mp"></td>
                         </tr>
                         <tr class="c_action">
-                            <td id="ally_skill-0"></td><td><button id="ally_skill-limitedTimes-0" class="ally-action-button" skill_index="0"></button></td>
+                            <td id="ally_skill-0"></td>
+                            <td><button id="ally_skill-limitedTimes-0" class="ally-action-button" skill_index="0"></button></td>
                         </tr>
                         <tr class="c_action">
-                            <td id="ally_skill-1"></td><td><button id="ally_skill-limitedTimes-1" class="ally-action-button" skill_index="1"></button></td>
+                            <td id="ally_skill-1"></td>
+                            <td><button id="ally_skill-limitedTimes-1" class="ally-action-button" skill_index="1"></button></td>
                         </tr>
                     </table>
                 </div>
@@ -203,3 +211,7 @@
     </main>
     <script type="text/javascript">
     </script>
+    <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
+</body>
+
+</html>

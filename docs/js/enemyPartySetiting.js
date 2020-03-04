@@ -1,4 +1,4 @@
-{
+var enemy =  {
     "party": [{
         "name": "ガキ",
         "max_hp": 20,

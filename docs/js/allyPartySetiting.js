@@ -1,5 +1,5 @@
 {
-    "party": [{
+    party: [{
         "name": "人修羅",
         "max_hp": 30,
         "cur_hp": 30,
@@ -17,22 +17,22 @@
             "精神": ""
         },
         "skills": [{
-                "name": "通常攻撃",
-                "limitedTimes": 999,
-                "effect": {
-                    "type": "ATTACK",
-                    "damage": 8,
-                    "criticalRate": 10
+                name: "通常攻撃",
+                limitedTimes: 999,
+                effect: {
+                    type: ALLY_SKILL_TYPE.ATTACK,
+                    damage: 8,
+                    criticalRate: 10
                 }
             },
             {
-                "name": "回復薬",
-                "limitedTimes": 1,
-                "effect": {
-                    "type": "HEAL",
-                    "amount": 50
+                name: "回復薬",
+                limitedTimes: 1,
+                effect: {
+                    type: ALLY_SKILL_TYPE.HEAL,
+                    amount: 50
                 }
             }
         ]
     }]
-}
+};
