@@ -1,12 +1,14 @@
 {
-    "party": [{
+    "party": [
+    {
         "name": "ガキ",
         "isAlive": true,
         "max_hp": 20,
         "cur_hp": 20,
         "max_mp": 19,
         "cur_mp": 19,
-        "resistance": {
+        "resistance":
+        {
             "アギ": "weak",
             "ブフ": "weak",
             "ジオ": "weak",
@@ -17,18 +19,36 @@
             "神経": "",
             "精神": ""
         },
-        "skills": [{
-                "name": "ひっかき",
-                "probability": 30
-            },
+        "skills": [
+        {
+            "name": "ひっかき",
+            "probability": 30,
+            "effect":
             {
-                "name": "スクカジャ",
-                "probability": 10
-            },
-            {
-                "name": "通常攻撃",
-                "probability": 60
+                "type": "[ATTACK]",
+                "damage": 12,
+                "criticalRate": 10
             }
-        ]
+        },
+        {
+            "name": "スクカジャ",
+            "probability": 10,
+            "effect":
+            {
+                "type": "[HEAL]",
+                "amount": 50
+            }
+        },
+        {
+            "name": "通常攻撃",
+            "probability": 60,
+            "effect":
+            {
+                "type": "[ATTACK]",
+                "damage": 8,
+                "criticalRate": 10
+            }
+
+        }]
     }]
 }
