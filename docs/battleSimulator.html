@@ -86,6 +86,12 @@
             right : 10vw;
         }
 
+        .c_simulateLog {
+            position : absolute;
+            right : 3vw;
+            font-size : 0.9rem;
+        }
+
         .c_normal_table {
             border-style: solid;
             padding: 0px 10px;
@@ -146,6 +152,9 @@
                         <span id="battleResult_count_lose"></span><span>敗</span></td>
                 </tr>
             </table>
+        </div>
+        <div id="i_simulateLog" class="c_simulateLog">
+            <!-- adding simulate action log by js -->
         </div>
         <div id="i_enemyParty_box_wrap" class="c_enemyParty_box_wrap c_common_party_box_wrap">
             <div id="i_enemyParty_box" class="c_enemyParty_box">
@@ -210,6 +219,10 @@
         </div>
     </main>
     <script type="text/javascript">
+    function appendSimulateLog(text, color) {
+        if(!color) color = '#fff'; 
+        $('#i_simulateLog').append('<div style="color:' + color + '">' + text + '</div>');
+    }
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
 </body>

@@ -1,6 +1,7 @@
 {
     "party": [{
         "name": "ガキ",
+        "isAlive": true,
         "max_hp": 20,
         "cur_hp": 20,
         "max_mp": 19,
