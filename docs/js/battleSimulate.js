@@ -15,6 +15,7 @@ var battleResult = {
 
 var enemy;
 var ally;
+var turnNum;
 
 $.ajax({
     type: "get",
@@ -113,11 +114,16 @@ function allyActionButtonMdown(event) {
     // id値の末尾番号から
     var skill_index = parseInt(this.attributes.skill_index.value, 10);
 
+    appendLifeGageLog(ally.party[0].name, ally.party[0].cur_hp, ally.party[0].max_hp, turnNum, '#ff6');
+    appendLifeGageLog(enemy.party[0].name, enemy.party[0].cur_hp, enemy.party[0].max_hp, turnNum, '#f36');
     actionAlly(ally.party[0], skill_index);
     actionEnemy();
     judgeFightOut();
 };
 
+/**
+ * 	自陣のアクション
+ */
 function actionAlly(allyMem, skill_index) {
     var _effect = allyMem.skills[skill_index].effect;
 
@@ -129,7 +135,7 @@ function actionAlly(allyMem, skill_index) {
             } else {
                 // 減算した結果が0以下の場合は0を現在HPに設定する
                 enemy.party[0].cur_hp = 0;
-                beDead(enemy.party[0], '#ff9');
+                beDead(enemy.party[0], false);
             }
             // HTML上に反映する
             replace('#enemy_hp', enemy.party[0].cur_hp + ' / ' + enemy.party[0].max_hp);
@@ -145,10 +151,15 @@ function actionAlly(allyMem, skill_index) {
             }
             // HTML上に反映する
             replace('#ally_hp', allyMem.cur_hp + ' / ' + allyMem.max_hp);
+            appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + allyMem.name + 'は' + allyMem.skills[skill_index].name + 'を' + allyMem.name + 'に唱えた。' + _effect.amount + '回復した。');
+
             break;
     }
 }
 
+/**
+ * 敵側のアクション
+ */
 function actionEnemy() {
     for (var enemyMem of enemy.party) {
         // 生きている場合のみ行動する
@@ -159,22 +170,24 @@ function actionEnemy() {
 }
 
 function actionEnemyMem(enemyMem, skill_index) {
-	logging('actionEnemyMem', 'start. skill_index = ' + skill_index);
-	var _effect = enemyMem.skills[skill_index].effect;
+    logging('actionEnemyMem', 'start. skill_index = ' + skill_index);
+    var _effect = enemyMem.skills[skill_index].effect;
 
-	switch(_effect.type) {
+    switch (_effect.type) {
         case ENEMY_SKILL_TYPE.ATTACK:
+            var attackEvent = new AttackEvent(_effect.name, _effect.damage, _effect.criticalRate);
+            loggingObj('attackEvent', attackEvent)
             if (0 < ally.party[0].cur_hp - _effect.damage) {
                 // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                ally.party[0].cur_hp = ally.party[0].cur_hp - _effect.damage;
+                ally.party[0].cur_hp = ally.party[0].cur_hp - attackEvent.doneDamage;
             } else {
                 // 減算した結果が0以下の場合は0を現在HPに設定する
                 ally.party[0].cur_hp = 0;
-                beDead(ally.party[0], '#f36');
+                beDead(ally.party[0], true);
             }
             // HTML上に反映する
             replace('#ally_hp', ally.party[0].cur_hp + ' / ' + ally.party[0].max_hp);
-            appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + enemyMem.name + 'は' + ally.party[0].name + 'に' + enemyMem.skills[skill_index].name + '。' + _effect.damage + 'のダメージを与えた。');
+            appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + enemyMem.name + 'は' + ally.party[0].name + 'に' + enemyMem.skills[skill_index].name + '。' + attackEvent.doneDamage + 'のダメージを与えた。');
             break;
         case ENEMY_SKILL_TYPE.HEAL:
             if (enemyMem.max_hp < enemyMem.cur_hp + _effect.amount) {
@@ -192,13 +205,48 @@ function actionEnemyMem(enemyMem, skill_index) {
 }
 
 function decideEnemyAction(enemyMem) {
-	var totalProbability = 0;
+    var totalProbability = 0;
     var rndmNum = Math.floor(Math.random() * 101);
     for (var skill_index in enemyMem.skills) {
-    	totalProbability = totalProbability + enemyMem.skills[skill_index].probability;
-    	if (rndmNum < totalProbability) return skill_index;
+        totalProbability = totalProbability + enemyMem.skills[skill_index].probability;
+        if (rndmNum < totalProbability) return skill_index;
     }
     alert('Error @ battolesSimulate.js decideEnemyAction()');
+}
+
+/**
+ * define Attack Object
+ */
+function AttackEvent(name, damage, criticalRate, hitRate) {
+    this.name = name;
+    this.damage = damage;
+    this.criticalRate = criticalRate;
+    this.hitRate = hitRate;
+
+    // クリティカル・耐性の考慮を踏まえたダメージ値を設定する
+    this.doneDamage = AttackEvent.prototype.attack();
+}
+
+AttackEvent.prototype.attack = function() {
+    logging('AttackEvent.prototype.attack', 'start : ' + this.name);
+    if (this.isHit()) {
+        if (this.isCritical()) {
+            logging('AttackEvent.prototype.attack', 'criticaled');
+            return this.damage * 1.5;
+        }
+        return this.damage;
+    }
+    return 0;
+}
+
+AttackEvent.prototype.isCritical = function() {
+    logging('AttackEvent.prototype.isCritical', 'returned ' + Math.random() * 101 < this.criticalRate);
+    return Math.random() * 101 < this.criticalRate;
+}
+
+AttackEvent.prototype.isHit = function() {
+    logging('AttackEvent.prototype.isHit', 'returned ' + Math.random() * 101 < this.hitRate);
+    return Math.random() * 101 < this.hitRate;
 }
 
 function judgeFightOut() {
@@ -236,7 +284,11 @@ function dispLose() {
     initialize();
 }
 
-function beDead(member, color) {
+function beDead(member, isAlly) {
     member.isAlive = false;
-    appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', color);
+    if (isAlly) {
+        appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#f36');
+    } else {
+        appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#ff9');
+    }
 };

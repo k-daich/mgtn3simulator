@@ -89,7 +89,9 @@
         .c_simulateLog {
             position : absolute;
             right : 3vw;
-            font-size : 0.9rem;
+            height : 70vh;
+            overflow : scroll;
+            font-size : 0.8rem;
         }
 
         .c_normal_table {
@@ -168,7 +170,7 @@
                             <td id="enemy_mp"></td>
                         </tr>
                         <tr class="c_status_meter">
-                            <td><meter id="enemy_hp_meter" max="100" valu="10"></meter></td>
+                            <td><meter id="enemy_hp_meter" max="100" value="10"></meter></td>
                             <td id="enemy_mp_meter"></td>
                         </tr>
                         <tr class="c_action">
@@ -219,8 +221,13 @@
         </div>
     </main>
     <script type="text/javascript">
+    function appendLifeGageLog(name, curHp, maxHp, turnNum, color) {
+        if (!color) color = '#fff';
+        $('#i_simulateLog').append('<div> ' + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
+    }
+
     function appendSimulateLog(text, color) {
-        if(!color) color = '#fff'; 
+        if (!color) color = '#fff';
         $('#i_simulateLog').append('<div style="color:' + color + '">' + text + '</div>');
     }
     </script>
