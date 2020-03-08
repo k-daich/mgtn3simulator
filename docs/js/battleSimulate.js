@@ -17,6 +17,96 @@ var enemy;
 var ally;
 var turnNum;
 
+function ActionUtil() {
+	var privateFunc = {};
+
+    privateFunc.isHit = function(hitRate) {
+        logging('actionUtil.isHit', 'start');
+        return Math.random() * 101 < hitRate;
+    }
+
+    privateFunc.isCritical = function(criticalRate) {
+        logging('actionUtil.isCritical', 'start');
+        return Math.random() * 101 < criticalRate;
+    }
+
+    this.attack = function(damage, hitRate, criticalRate) {
+        logging('actionUtil.attack', 'start');
+        if (privateFunc.isHit()) {
+            logging('actionUtil.attack', 'hitted');
+            if (privateFunc.isCritical()) {
+                logging('actionUtil.attack', 'criticaled');
+                return this.damage * 1.5;
+            }
+            return this.damage;
+        }
+        return 0;
+    }
+}
+
+const actionUtil = new ActionUtil();
+
+function AllyMember(allyMem) {
+    this.name = allyMem.name;
+    this.max_hp = allyMem.max_hp;
+    this.cur_hp = allyMem.cur_hp;
+    this.max_mp = allyMem.max_mp;
+    this.cur_mp = allyMem.cur_mp;
+    this.resistance = allyMem.resistance;
+    this.skills = allyMem.skills;
+
+    /**
+     * 生きているかを返す
+     */
+    this.isAlive = function() {
+        if (this.cur_hp = 0) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 行動する
+     */
+    this.action = function(skill_index) {
+        logging('AllyMember.action', 'start');
+        var _effect = this.skills[skill_index].effect;
+
+        switch (_effect.type) {
+            case ALLY_SKILL_TYPE.ATTACK:
+                var doneDamage = actionUtil.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
+                if (0 < enemy.party[0].cur_hp - doneDamage) {
+                    // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
+                    enemy.party[0].cur_hp = enemy.party[0].cur_hp - doneDamage;
+                } else {
+                    // 減算した結果が0以下の場合は0を現在HPに設定する
+                    enemy.party[0].cur_hp = 0;
+                    beDead(enemy.party[0], false);
+                }
+                // HTML上に反映する
+                replace('#enemy_hp', enemy.party[0].cur_hp + ' / ' + enemy.party[0].max_hp);
+                appendSimulateLog(ALLY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + enemy.party[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
+                break;
+            case ALLY_SKILL_TYPE.HEAL:
+                if (this.max_hp < this.cur_hp + _effect.amount) {
+                    // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
+                    this.cur_hp = this.max_hp;
+                } else {
+                    // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
+                    this.cur_hp = this.cur_hp + _effect.amount;
+                }
+                // HTML上に反映する
+                replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
+                appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + this.skills[skill_index].name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+
+                break;
+            default:
+                logging('actionAlly', 'Error. _effect.type is not found.');
+                break;
+        }
+    }
+}
+
 $.ajax({
     type: "get",
     url: "/mgtn3simulator/js/enemySetiting.json?query=" + Date.now(),
@@ -116,46 +206,12 @@ function allyActionButtonMdown(event) {
 
     appendLifeGageLog(ally.party[0].name, ally.party[0].cur_hp, ally.party[0].max_hp, turnNum, '#ff6');
     appendLifeGageLog(enemy.party[0].name, enemy.party[0].cur_hp, enemy.party[0].max_hp, turnNum, '#f36');
-    actionAlly(ally.party[0], skill_index);
+    let allyMem = new AllyMember(ally.party[0]);
+    allyMem.action(skill_index);
+    // actionAlly(ally.party[0], skill_index);
     actionEnemy();
     judgeFightOut();
 };
-
-/**
- * 	自陣のアクション
- */
-function actionAlly(allyMem, skill_index) {
-    var _effect = allyMem.skills[skill_index].effect;
-
-    switch (_effect.type) {
-        case ALLY_SKILL_TYPE.ATTACK:
-            if (0 < enemy.party[0].cur_hp - _effect.damage) {
-                // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                enemy.party[0].cur_hp = enemy.party[0].cur_hp - _effect.damage;
-            } else {
-                // 減算した結果が0以下の場合は0を現在HPに設定する
-                enemy.party[0].cur_hp = 0;
-                beDead(enemy.party[0], false);
-            }
-            // HTML上に反映する
-            replace('#enemy_hp', enemy.party[0].cur_hp + ' / ' + enemy.party[0].max_hp);
-            appendSimulateLog(ALLY_SKILL_TYPE.ATTACK + ' ' + allyMem.name + 'は' + enemy.party[0].name + 'に' + allyMem.skills[skill_index].name + '。' + _effect.damage + 'のダメージを与えた。');
-            break;
-        case ALLY_SKILL_TYPE.HEAL:
-            if (allyMem.max_hp < allyMem.cur_hp + _effect.amount) {
-                // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
-                allyMem.cur_hp = allyMem.max_hp;
-            } else {
-                // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
-                allyMem.cur_hp = allyMem.cur_hp + _effect.amount;
-            }
-            // HTML上に反映する
-            replace('#ally_hp', allyMem.cur_hp + ' / ' + allyMem.max_hp);
-            appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + allyMem.name + 'は' + allyMem.skills[skill_index].name + 'を' + allyMem.name + 'に唱えた。' + _effect.amount + '回復した。');
-
-            break;
-    }
-}
 
 /**
  * 敵側のアクション
@@ -175,11 +231,11 @@ function actionEnemyMem(enemyMem, skill_index) {
 
     switch (_effect.type) {
         case ENEMY_SKILL_TYPE.ATTACK:
-            var attackEvent = new AttackEvent(_effect.name, _effect.damage, _effect.criticalRate);
+            var doneDamage = new actionUtil.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
             loggingObj('attackEvent', attackEvent)
-            if (0 < ally.party[0].cur_hp - _effect.damage) {
+            if (0 < ally.party[0].cur_hp - doneDamage) {
                 // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                ally.party[0].cur_hp = ally.party[0].cur_hp - attackEvent.doneDamage;
+                ally.party[0].cur_hp = ally.party[0].cur_hp - doneDamage;
             } else {
                 // 減算した結果が0以下の場合は0を現在HPに設定する
                 ally.party[0].cur_hp = 0;
@@ -187,7 +243,7 @@ function actionEnemyMem(enemyMem, skill_index) {
             }
             // HTML上に反映する
             replace('#ally_hp', ally.party[0].cur_hp + ' / ' + ally.party[0].max_hp);
-            appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + enemyMem.name + 'は' + ally.party[0].name + 'に' + enemyMem.skills[skill_index].name + '。' + attackEvent.doneDamage + 'のダメージを与えた。');
+            appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + enemyMem.name + 'は' + ally.party[0].name + 'に' + enemyMem.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
             break;
         case ENEMY_SKILL_TYPE.HEAL:
             if (enemyMem.max_hp < enemyMem.cur_hp + _effect.amount) {
@@ -201,6 +257,9 @@ function actionEnemyMem(enemyMem, skill_index) {
             replace('#enemy_hp', enemyMem.cur_hp + ' / ' + enemyMem.max_hp);
             appendSimulateLog(ENEMY_SKILL_TYPE.HEAL + ' ' + enemyMem.name + 'は' + enemyMem.skills[skill_index].name + 'を' + enemyMem.name + 'に唱えた。' + _effect.amount + '回復した。');
             break;
+        default:
+            logging('actionEnemy', 'Error. _effect.type is not found.');
+            break;
     }
 }
 
@@ -212,41 +271,6 @@ function decideEnemyAction(enemyMem) {
         if (rndmNum < totalProbability) return skill_index;
     }
     alert('Error @ battolesSimulate.js decideEnemyAction()');
-}
-
-/**
- * define Attack Object
- */
-function AttackEvent(name, damage, criticalRate, hitRate) {
-    this.name = name;
-    this.damage = damage;
-    this.criticalRate = criticalRate;
-    this.hitRate = hitRate;
-
-    // クリティカル・耐性の考慮を踏まえたダメージ値を設定する
-    this.doneDamage = AttackEvent.prototype.attack();
-}
-
-AttackEvent.prototype.attack = function() {
-    logging('AttackEvent.prototype.attack', 'start : ' + this.name);
-    if (this.isHit()) {
-        if (this.isCritical()) {
-            logging('AttackEvent.prototype.attack', 'criticaled');
-            return this.damage * 1.5;
-        }
-        return this.damage;
-    }
-    return 0;
-}
-
-AttackEvent.prototype.isCritical = function() {
-    logging('AttackEvent.prototype.isCritical', 'returned ' + Math.random() * 101 < this.criticalRate);
-    return Math.random() * 101 < this.criticalRate;
-}
-
-AttackEvent.prototype.isHit = function() {
-    logging('AttackEvent.prototype.isHit', 'returned ' + Math.random() * 101 < this.hitRate);
-    return Math.random() * 101 < this.hitRate;
 }
 
 function judgeFightOut() {

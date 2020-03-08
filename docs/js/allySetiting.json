@@ -27,6 +27,7 @@
             {
                 "type": "[ATTACK]",
                 "damage": 8,
+                "hitRate": 80,
                 "criticalRate": 10
             }
         },
