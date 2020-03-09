@@ -37,7 +37,8 @@
             "effect":
             {
                 "type": "[HEAL]",
-                "amount": 50
+                "amount": 50,
+                "costMp": 12
             }
         },
         {

@@ -88,6 +88,7 @@
 
         .c_simulateLog {
             position : absolute;
+            top : 10vh;
             right : 3vw;
             height : 70vh;
             overflow : scroll;
@@ -126,7 +127,8 @@
 
         .c_total_result {
             position : absolute;
-            right : 2vw;
+            top : 5vh;
+            right : 4vw;
         }
 
         .c_common_party_box_wrap {
@@ -134,7 +136,7 @@
         }
 
         .c_common_box {
-            margin : 0 auto;
+            margin : 10vh auto;
             width : 40vw;
             height : 30vh;
         }
@@ -150,7 +152,7 @@
     <main>
         <div id="today" class="date">
         </div>
-        <div id="i_situationId" class="c_situationId c_normal_table">
+<!--         <div id="i_situationId" class="c_situationId c_normal_table">
             <table>
                 <tr>
                     <td id="simulation.id">TODO : disp id</td>
@@ -166,7 +168,7 @@
                 </tr>
             </table>
         </div>
-        <div id="i_total_result" class="c_total_result">
+ -->        <div id="i_total_result" class="c_total_result">
             <table>
                 <tr>
                     <td><span id="battleResult_count_win"></span><span>勝:</span>
@@ -185,14 +187,14 @@
                             <td id="enemy_name"></td>
                         </tr>
                         <tr class="c_status">
-                            <td id="enemy_hp"></td>
-                            <td id="enemy_mp"></td>
+                            <td><span id="enemy_hp"></span><br><meter id="i_enemy_hp_meter" max="100" value="10"></meter></td>
+                            <td><span id="enemy_mp"></span><br><meter id="i_enemy_mp_meter" max="100" value="10"></meter></td>
                         </tr>
-                        <tr class="c_status_meter">
+<!--                         <tr class="c_status_meter">
                             <td><meter id="enemy_hp_meter" max="100" value="10"></meter></td>
                             <td id="enemy_mp_meter"></td>
                         </tr>
-                        <tr class="c_action">
+ -->                        <tr class="c_action">
                             <td id="enemy_skill-0"></td>
                             <td id="enemy_skill-select-probability-0"></td>
                         </tr>
@@ -216,8 +218,8 @@
                             <td id="ally_name"></td>
                         </tr>
                         <tr>
-                            <td id="ally_hp"></td>
-                            <td id="ally_mp"></td>
+                            <td><span id="ally_hp"></span><br><meter id="i_ally_hp_meter" max="100" value="10"></meter></td>
+                            <td><span id="ally_mp"></span><br><meter id="i_ally_mp_meter" max="100" value="10"></meter></td>
                         </tr>
                         <tr class="c_action">
                             <td id="ally_skill-0"></td>
@@ -243,6 +245,7 @@
     function appendLifeGageLog(name, curHp, maxHp, turnNum, color) {
         if (!color) color = '#fff';
         $('#i_simulateLog').append('<div> ' + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
+        $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
     }
 
     function appendSimulateLog(text, color) {
