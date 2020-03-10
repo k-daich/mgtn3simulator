@@ -34,12 +34,12 @@ function TurnPressManager() {
         for (var mem of party) {
             if (mem.isAlive) actionableMemberNum++;
         }
-        loggingObj('TurnPressManager.countInitPTurn', actionableMemberNum);
+        loggingObj('TurnPressManager.countInitTurn', actionableMemberNum);
         return actionableMemberNum;
     }
 
     this.init = function(party) {
-        turnPress = Array(privateFunc.countInitPTurn(party));
+        turnPress = Array(privateFunc.countInitTurn(party));
         turnPress.fill(TURN_PRESS_STATUS.ONE);
         loggingObj('TurnPressManager.init', turnPress);
     }
@@ -51,53 +51,57 @@ function TurnPressManager() {
         return true;
     }
 
-    this.decrementTurn[TURN_PRESS_STATUS.ONE] = function() {
-        for (var index in turnPress) {
-            if (TURN_PRESS_STATUS.ONE == turnPress[index] ||
-                TURN_PRESS_STATUS.HALF == turnPress[index]) {
-                turnPress[index] = TURN_PRESS_STATUS.NONE;
-                return;
+    this.decrementTurn = {
+        one: function() {
+            for (var index in turnPress) {
+                if (TURN_PRESS_STATUS.ONE == turnPress[index] ||
+                    TURN_PRESS_STATUS.HALF == turnPress[index]) {
+                    turnPress[index] = TURN_PRESS_STATUS.NONE;
+                    return;
+                }
             }
-        }
-        loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
-    }
+            loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
+        },
 
-    this.decrementTurn[TURN_PRESS_STATUS.HALF] = function(decrementNum) {
-        for (var index in turnPress) {
-            if (TURN_PRESS_STATUS.ONE == turnPress[index]) {
-                turnPress[index] = TURN_PRESS_STATUS.HALF;
-                return;
-            } else if (TURN_PRESS_STATUS.HALF == turnPress[index]) {
-                for (var afterIdx = index + 1; afterIdx < turnPress.length(); afterIdx++) {
-                    if (TURN_PRESS_STATUS.ONE == turnPress[afterIdx]) {
-                        turnPress[index] = TURN_PRESS_STATUS.HALF;
-                        return;
+        half: function() {
+            for (var index in turnPress) {
+                if (TURN_PRESS_STATUS.ONE == turnPress[index]) {
+                    turnPress[index] = TURN_PRESS_STATUS.HALF;
+                    return;
+                } else if (TURN_PRESS_STATUS.HALF == turnPress[index]) {
+                    for (var afterIdx = index + 1; afterIdx < turnPress.length; afterIdx++) {
+                        if (TURN_PRESS_STATUS.ONE == turnPress[afterIdx]) {
+                            turnPress[index] = TURN_PRESS_STATUS.HALF;
+                            return;
+                        }
                     }
+                    turnPress[index] = TURN_PRESS_STATUS.NONE;
                 }
-                turnPress[index] = TURN_PRESS_STATUS.NONE;
             }
-        }
-        loggingObj('TurnPressManager.decrementTurn[HALF] Error : Unexpected turnPress values', turnPress);
-    }
+            loggingObj('TurnPressManager.decrementTurn[HALF] Error : Unexpected turnPress values', turnPress);
+        },
 
-    this.decrementTurn[TURN_PRESS_STATUS.TWO] = function(decrementNum) {
-        for (var index in turnPress) {
-            if (TURN_PRESS_STATUS.ONE == turnPress[index] ||
-                TURN_PRESS_STATUS.HALF == turnPress[index]) {
-                turnPress[index] = TURN_PRESS_STATUS.NONE;
-                if (turnPress.length() != index + 1) {
-                    turnPress[index + 1] = TURN_PRESS_STATUS.NONE;
+        two: function() {
+            for (var index in turnPress) {
+                if (TURN_PRESS_STATUS.ONE == turnPress[index] ||
+                    TURN_PRESS_STATUS.HALF == turnPress[index]) {
+                    turnPress[index] = TURN_PRESS_STATUS.NONE;
+                    if (turnPress.length != index + 1) {
+                        turnPress[index + 1] = TURN_PRESS_STATUS.NONE;
+                    }
+                    return;
                 }
-                return;
             }
-        }
-        loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
-    }
+            loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
+        },
 
-    this.decrementTurn[TURN_PRESS_STATUS.ALL] = function(decrementNum) {
-        turnPress.fill(TURN_PRESS_STATUS.NONE);
+        all: function() {
+            turnPress.fill(TURN_PRESS_STATUS.NONE);
+        },
     }
 }
+
+const turnPressManager = new TurnPressManager();
 
 function SimulateEvent() {
     var pressTurn;
@@ -123,10 +127,13 @@ function SimulateEvent() {
             logging('SimulateEvent.attack', 'hitted');
             if (privateFunc.isCritical(criticalRate)) {
                 logging('SimulateEvent.attack', 'criticaled');
+                turnPressManager.decrementTurn.half();
                 return damage * 1.5;
             }
+            turnPressManager.decrementTurn.one();
             return damage;
         }
+        turnPressManager.decrementTurn.two();
         return 0;
     }
 
@@ -241,6 +248,7 @@ function EnemyMember(enemyMem) {
      */
     this.action = function() {
         logging('EnemyMember.action', 'start');
+        if (turnPressManager.isTurnEnd()) return;
         var skill_index = privateFunc.decideEnemyAction(this.skills);
         logging('action', 'skill_index : ' + skill_index);
         var _effect = this.skills[skill_index].effect;
@@ -311,7 +319,7 @@ $.ajax({
             function(data) {
                 ally = data;
                 loggingObj('ajaxResult : ally', ally);
-                initialize(enemy, ally);
+                battleReset();
                 // allyのアクションボタンにイベントリスナー付与
                 $('.ally-action-button').on('click', allyActionButtonMdown);
             },
@@ -342,13 +350,14 @@ function replaceAttr(eleId, attrName, value) {
     loggingObj('replaceAttrAfter : ' + eleId, 'replaced value : ' + $(eleId).attr(attrName));
 };
 
-function initialize() {
-    logging('initialize @ battleSimulator.js', 'start');
+function battleReset() {
+    logging('battleReset @ battleSimulator.js', 'start');
 
+    turnPressManager.init(ally.party);
     initMemsStatus();
     turnNum = 0;
-    loggingObj('initialized : enemy', enemy);
-    loggingObj('initialized : ally', ally);
+    loggingObj('battleReset : enemy', enemy);
+    loggingObj('battleReset : ally', ally);
 
     replace('#battleResult_count_win', battleResult.count_win);
     replace('#battleResult_count_lose', battleResult.count_lose);
@@ -449,11 +458,11 @@ function actionEnemy() {
 }
 
 function judgeFightOut() {
-    ifLostInitialize();
-    ifWonInitialize();
+    ifLostBattleReset();
+    ifWonBattleReset();
 }
 
-function ifLostInitialize() {
+function ifLostBattleReset() {
     for (var allyMem of ally.party) {
         logging('allyMem.isAlive', allyMem.isAlive);
         if (allyMem.isAlive) return;
@@ -462,7 +471,7 @@ function ifLostInitialize() {
     dispLose();
 }
 
-function ifWonInitialize() {
+function ifWonBattleReset() {
     for (var enemyMem of enemy.party) {
         logging('enemyMem.isAlive', enemyMem.isAlive);
         if (enemyMem.isAlive) return;
@@ -474,11 +483,11 @@ function ifWonInitialize() {
 function dispWin() {
     logging('dispWin', 'start')
     battleResult.count_win = ++battleResult.count_win;
-    initialize();
+    battleReset();
 }
 
 function dispLose() {
     logging('dispLose', 'start')
     battleResult.count_lose = ++battleResult.count_lose;
-    initialize();
+    battleReset();
 }
