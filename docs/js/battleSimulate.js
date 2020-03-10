@@ -8,6 +8,14 @@ var ENEMY_SKILL_TYPE = {
     HEAL: "[HEAL]",
 }
 
+var TURN_PRESS_STATUS = {
+    ALL: 10,
+    TWO: 2,
+    ONE: 1,
+    HALF: 0.5,
+    NONE: 0,
+}
+
 var battleResult = {
     "count_win": 0,
     "count_lose": 0
@@ -15,10 +23,86 @@ var battleResult = {
 
 var enemy;
 var ally;
-var turnNum;
+var turnNum = 0;
+
+function TurnPressManager() {
+    var turnPress;
+    var privateFunc = {};
+
+    privateFunc.countInitTurn = function(party) {
+        var actionableMemberNum = 0;
+        for (var mem of party) {
+            if (mem.isAlive) actionableMemberNum++;
+        }
+        loggingObj('TurnPressManager.countInitPTurn', actionableMemberNum);
+        return actionableMemberNum;
+    }
+
+    this.init = function(party) {
+        turnPress = Array(privateFunc.countInitPTurn(party));
+        turnPress.fill(TURN_PRESS_STATUS.ONE);
+        loggingObj('TurnPressManager.init', turnPress);
+    }
+
+    this.isTurnEnd = function(party) {
+        for (var status of turnPress) {
+            if (status != TURN_PRESS_STATUS.NONE) return false;
+        }
+        return true;
+    }
+
+    this.decrementTurn[TURN_PRESS_STATUS.ONE] = function() {
+        for (var index in turnPress) {
+            if (TURN_PRESS_STATUS.ONE == turnPress[index] ||
+                TURN_PRESS_STATUS.HALF == turnPress[index]) {
+                turnPress[index] = TURN_PRESS_STATUS.NONE;
+                return;
+            }
+        }
+        loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
+    }
+
+    this.decrementTurn[TURN_PRESS_STATUS.HALF] = function(decrementNum) {
+        for (var index in turnPress) {
+            if (TURN_PRESS_STATUS.ONE == turnPress[index]) {
+                turnPress[index] = TURN_PRESS_STATUS.HALF;
+                return;
+            } else if (TURN_PRESS_STATUS.HALF == turnPress[index]) {
+                for (var afterIdx = index + 1; afterIdx < turnPress.length(); afterIdx++) {
+                    if (TURN_PRESS_STATUS.ONE == turnPress[afterIdx]) {
+                        turnPress[index] = TURN_PRESS_STATUS.HALF;
+                        return;
+                    }
+                }
+                turnPress[index] = TURN_PRESS_STATUS.NONE;
+            }
+        }
+        loggingObj('TurnPressManager.decrementTurn[HALF] Error : Unexpected turnPress values', turnPress);
+    }
+
+    this.decrementTurn[TURN_PRESS_STATUS.TWO] = function(decrementNum) {
+        for (var index in turnPress) {
+            if (TURN_PRESS_STATUS.ONE == turnPress[index] ||
+                TURN_PRESS_STATUS.HALF == turnPress[index]) {
+                turnPress[index] = TURN_PRESS_STATUS.NONE;
+                if (turnPress.length() != index + 1) {
+                    turnPress[index + 1] = TURN_PRESS_STATUS.NONE;
+                }
+                return;
+            }
+        }
+        loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
+    }
+
+    this.decrementTurn[TURN_PRESS_STATUS.ALL] = function(decrementNum) {
+        turnPress.fill(TURN_PRESS_STATUS.NONE);
+    }
+}
 
 function SimulateEvent() {
+    var pressTurn;
     var privateFunc = {};
+
 
     privateFunc.isHit = function(hitRate) {
         logging('SimulateEvent.isHit', 'hitRate : ' + hitRate + ' random : ' + Math.random() * 101);
@@ -46,18 +130,17 @@ function SimulateEvent() {
         return 0;
     }
 
-    this.decrementMp = function (member, costMp) {
-    	if(0 < member.cur_mp - costMp) {
-    		member.cur_mp - costMp;
-    		return true;
-    	}
-    	else {
+    this.decrementMp = function(member, costMp) {
+        if (0 < member.cur_mp - costMp) {
+            member.cur_mp - costMp;
+            return true;
+        } else {
             appendSimulateLog('[Not Enough MP]  ' + decrementMp.name + 'はMPが足りない！');
-    		return false;
-    	}
+            return false;
+        }
     }
 
-    this.beDead = function (member, isAlly) {
+    this.beDead = function(member, isAlly) {
         member.isAlive = false;
         if (isAlly) {
             appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#f36');
@@ -263,6 +346,7 @@ function initialize() {
     logging('initialize @ battleSimulator.js', 'start');
 
     initMemsStatus();
+    turnNum = 0;
     loggingObj('initialized : enemy', enemy);
     loggingObj('initialized : ally', ally);
 
@@ -323,6 +407,7 @@ function allyActionButtonMdown(event) {
     // 二度押し防止用フラグ：立てる
     allyActionButtonMdown_runningFlg = true;
 
+    turnNum++;
     // 使用回数をデクリメントする
     var dcrmntNum = parseInt(this.textContent, 10) - 1;
     replace('#' + this.id, dcrmntNum);
@@ -341,10 +426,10 @@ function allyActionButtonMdown(event) {
     replaceAttr('#i_ally_hp_meter', 'value', ally.party[0].cur_hp);
     replaceAttr('#i_ally_mp_meter', 'value', ally.party[0].cur_mp);
 
-    judgeFightOut();
-
     appendLifeGageLog(ally.party[0].name, ally.party[0].cur_hp, ally.party[0].max_hp, turnNum, '#ff6');
     appendLifeGageLog(enemy.party[0].name, enemy.party[0].cur_hp, enemy.party[0].max_hp, turnNum, '#f36');
+
+    judgeFightOut();
     // 二度押し防止用フラグ：落とす
     allyActionButtonMdown_runningFlg = false;
 };

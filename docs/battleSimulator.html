@@ -244,7 +244,7 @@
     <script type="text/javascript">
     function appendLifeGageLog(name, curHp, maxHp, turnNum, color) {
         if (!color) color = '#fff';
-        $('#i_simulateLog').append('<div> ' + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
+        $('#i_simulateLog').append('<div> ' + turnNum + 'ターン目　： '  + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
         $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
     }
 
