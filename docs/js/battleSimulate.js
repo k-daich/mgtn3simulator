@@ -16,13 +16,22 @@ var TURN_PRESS_STATUS = {
     NONE: 0,
 }
 
+var ATK_RESULT = {
+    HIT: 1,
+    AVOID: 2,
+    CRITICAL: 3,
+    REFLECT: 4,
+    ABSORP: 5,
+}
+
+
 var battleResult = {
     "count_win": 0,
     "count_lose": 0
 };
 
-var enemy;
-var ally;
+var enemyParty = new Array();
+var allyParty = new Array();
 var turnNum = 0;
 
 function TurnPressManager() {
@@ -38,7 +47,7 @@ function TurnPressManager() {
         return actionableMemberNum;
     }
 
-    this.init = function(party) {
+    this.initTurn = function(party) {
         turnPress = Array(privateFunc.countInitTurn(party));
         turnPress.fill(TURN_PRESS_STATUS.ONE);
         loggingObj('TurnPressManager.init', turnPress);
@@ -121,7 +130,7 @@ function SimulateEvent() {
 
     this.attack = function(damage, hitRate, criticalRate) {
         logging('SimulateEvent.attack', 'start');
-        logging('SimulateEvent.attack', ' param:' + damage + hitRate + criticalRate);
+        logging('SimulateEvent.attack', ' param:' + damage + ',' + hitRate + ',' + criticalRate);
 
         if (privateFunc.isHit(hitRate)) {
             logging('SimulateEvent.attack', 'hitted');
@@ -187,6 +196,7 @@ function AllyMember(allyMem) {
 
         switch (_effect.type) {
             case ALLY_SKILL_TYPE.ATTACK:
+
                 var doneDamage = simulateEvent.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
                 logging('actionEnemyMem : doneDamage', doneDamage);
 
@@ -241,6 +251,14 @@ function EnemyMember(enemyMem) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 行動可否を返す
+     */
+    this.isActionable = function() {
+        // TODO : implements other factor
+        return this.isAlive();
     }
 
     /**
@@ -299,7 +317,6 @@ function EnemyMember(enemyMem) {
         }
         alert('Error @ battolesSimulate.js decideEnemyAction() rndmNum : ' + rndmNum + ',totalProbability : ' + totalProbability);
     }
-
 }
 
 $.ajax({
@@ -309,16 +326,20 @@ $.ajax({
 }).then(
     // 通信成功時の処理
     function(data) {
-        enemy = data;
-        loggingObj('ajaxResult : enemy', enemy);
+        loggingObj('ajaxResult : enemy', data);
+        data.party.forEach(member => enemyParty.push(new EnemyMember(member)));
+        loggingObj('ajaxResult : enemyParty', enemyParty);
+
         $.ajax({
             type: "get",
             url: "/mgtn3simulator/js/allySetiting.json?query=" + Date.now(),
             dataType: "json",
         }).then(
             function(data) {
-                ally = data;
-                loggingObj('ajaxResult : ally', ally);
+                loggingObj('ajaxResult : ally', data);
+                data.party.forEach(member => allyParty.push(new AllyMember(member)));
+                loggingObj('ajaxResult : allyParty', allyParty);
+
                 battleReset();
                 // allyのアクションボタンにイベントリスナー付与
                 $('.ally-action-button').on('click', allyActionButtonMdown);
@@ -344,16 +365,15 @@ function replace(eleId, text) {
 };
 
 function replaceAttr(eleId, attrName, value) {
-    loggingObj('replaceAttrBefore : ' + eleId, 'attrName : ' + attrName + ', value : ' + value);
-
+    // loggingObj('replaceAttrBefore : ' + eleId, 'attrName : ' + attrName + ', value : ' + value);
     $(eleId).attr(attrName, value);
-    loggingObj('replaceAttrAfter : ' + eleId, 'replaced value : ' + $(eleId).attr(attrName));
+    // loggingObj('replaceAttrAfter : ' + eleId, 'replaced value : ' + $(eleId).attr(attrName));
 };
 
 function battleReset() {
     logging('battleReset @ battleSimulator.js', 'start');
 
-    turnPressManager.init(ally.party);
+    turnPressManager.initTurn(ally.party);
     initMemsStatus();
     turnNum = 0;
     loggingObj('battleReset : enemy', enemy);
@@ -427,8 +447,13 @@ function allyActionButtonMdown(event) {
 
     let allyMem = new AllyMember(ally.party[0]);
     allyMem.action(skill_index);
-    // actionAlly(ally.party[0], skill_index);
-    actionEnemy();
+
+    if (turnPressManager.isTurnEnd()) {
+        appendSimulateLog('[TURN END]  ALLY');
+        logging('turnPressManager', 'Turn End');
+        actionEnemy();
+        appendSimulateLog('[TURN END]  ENEMY');
+    }
 
     replaceAttr('#i_enemy_hp_meter', 'value', enemy.party[0].cur_hp);
     replaceAttr('#i_enemy_mp_meter', 'value', enemy.party[0].cur_mp);
@@ -447,13 +472,28 @@ function allyActionButtonMdown(event) {
  * 敵側のアクション
  */
 function actionEnemy() {
-    for (var index in enemy.party) {
-        // 生きている場合のみ行動する
-        if (enemy.party[index].isAlive) {
-            loggingObj('TEMP : enemy.party[index]', enemy.party[index]);
-            let enemyMem = new EnemyMember(enemy.party[index]);
-            enemyMem.action();
+    // プレスターン状態を初期化（敵側）
+    turnPressManager.initTurn(enemy.party);
+    // プレスターンが終了するまで繰り返す
+    while (!turnPressManager.isTurnEnd()) {
+        logging('enemy is not end of turn', turnPressManager.isTurnEnd());
+        // 前回行動したメンバーのIndexを保存する（初期値はパーティの最終Index）
+        var preActedIdx = enemy.party.length - 1;
+        // パーティの数だけ繰り返し、行動可能なメンバーを探す
+        for (var actOrderIdx = 1; actOrderIdx != enemy.party.length + 1; actOrderIdx++) {
+            // 前回行動したメンバーを始点とし、行動可能か判定する
+            var i = (preActedIdx + actOrderIdx) % 3;
+            logging('isActionable', 'index : ' + i + ' is ' + enemy.party[i].isActionable());
+            if (enemy.party[i].isActionable()) {
+                preActedIdx = i;
+                logging('actionEnemy', 'index : ' + i);
+                let enemyMem = new EnemyMember(enemy.party[i]);
+                enemyMem.action();
+                break;
+            }
+
         }
+
     }
 }
 
