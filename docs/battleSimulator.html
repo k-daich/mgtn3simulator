@@ -88,9 +88,10 @@
 
         .c_simulateLog {
             position : absolute;
-            top : 10vh;
+            top : 70vh;
             right : 3vw;
-            height : 70vh;
+            height : 30vh;
+            width : 90vw;
             overflow : scroll;
             font-size : 0.8rem;
             white-space: nowrap;
@@ -244,24 +245,6 @@
         </div>
     </main>
     <script type="text/javascript">
-    var _ = {
-        "isAllyTurn" : true,
-    };
-
-    function switchLogBgColor(isAllyTurn) {
-        _.isAllyTurn = isAllyTurn;
-    }
-
-    function appendLifeGageLog(name, curHp, maxHp, turnNum) {
-        $('#i_simulateLog').append('<div> ' + turnNum + 'ターン目　： ' + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
-        $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
-    }
-
-    function appendSimulateLog(text, color) {
-        if (!color) color = '#fff';
-        var bgColor = _.isAllyTurn ? '#644': '#446';
-        $('#i_simulateLog').append('<div style="color:' + color + '; background-color:' + bgColor + '">' + text + '</div>');
-    }
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
 </body>
