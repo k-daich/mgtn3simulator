@@ -35,16 +35,35 @@ var allyParty = new Array();
 var turnNum = 0;
 
 function TurnPressManager() {
-    var turnPress;
+    var turnPress = new Array();
     var privateFunc = {};
 
     privateFunc.countInitTurn = function(party) {
         var actionableMemberNum = 0;
         for (var mem of party) {
-            if (mem.isAlive) actionableMemberNum++;
+            if (mem.isAlive()) actionableMemberNum++;
         }
         loggingObj('TurnPressManager.countInitTurn', actionableMemberNum);
         return actionableMemberNum;
+    }
+
+    this.toString = function(isAlly) {
+
+        var str = isAlly ? 'ALLY [' : 'ENEMY [';
+        for (var element of turnPress) {
+            switch (element) {
+                case TURN_PRESS_STATUS.ONE:
+                    str = str + '■,';
+                    break;
+                case TURN_PRESS_STATUS.HALF:
+                    str = str + '□,';
+                    break;
+                case TURN_PRESS_STATUS.NONE:
+                    str = str + '-,';
+                    break;
+            }
+        }
+        return str.substring(0, str.length - 1) + ']';
     }
 
     this.initTurn = function(party) {
@@ -157,12 +176,50 @@ function SimulateEvent() {
     }
 
     this.beDead = function(member, isAlly) {
-        member.isAlive = false;
         if (isAlly) {
             appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#f36');
         } else {
             appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#ff9');
         }
+    }
+
+    this.judgeFightOut = function() {
+        privateFunc.ifLostBattleReset();
+        privateFunc.ifWonBattleReset();
+    }
+
+    privateFunc.ifLostBattleReset = function() {
+        for (var allyMem of allyParty) {
+            // logging('allyMem.isAlive', allyMem.isAlive());
+            if (allyMem.isAlive()) return;
+        }
+        // 全員死んでいたら負けを表示
+        privateFunc.dispLose();
+    }
+
+    privateFunc.ifWonBattleReset = function() {
+        for (var enemyMem of enemyParty) {
+            // logging('enemyMem.isAlive', enemyMem.isAlive());
+            if (enemyMem.isAlive()) return;
+        }
+        // 全員死んでいたら勝ちを表示
+        privateFunc.dispWin();
+    }
+
+    privateFunc.dispWin = function() {
+        // logging('dispWin', 'start')
+        battleResult.count_win = ++battleResult.count_win;
+        battleReset();
+    }
+
+    privateFunc.dispLose = function() {
+        // logging('dispLose', 'start')
+        battleResult.count_lose = ++battleResult.count_lose;
+        battleReset();
+    }
+
+    this.appendTurnPressLog = function(isAlly) {
+        appendSimulateLog(turnPressManager.toString(isAlly), '#444');
     }
 }
 
@@ -191,26 +248,27 @@ function AllyMember(allyMem) {
      * 行動する
      */
     this.action = function(skill_index) {
-        logging('AllyMember.action', 'start');
+        simulateEvent.appendTurnPressLog(true);
+        // logging('AllyMember.action', 'start');
         var _effect = this.skills[skill_index].effect;
 
         switch (_effect.type) {
             case ALLY_SKILL_TYPE.ATTACK:
 
                 var doneDamage = simulateEvent.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
-                logging('actionEnemyMem : doneDamage', doneDamage);
+                // logging('actionEnemyMem : doneDamage', doneDamage);
 
-                if (0 < enemy.party[0].cur_hp - doneDamage) {
+                if (0 < enemyParty[0].cur_hp - doneDamage) {
                     // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                    enemy.party[0].cur_hp = enemy.party[0].cur_hp - doneDamage;
+                    enemyParty[0].cur_hp = enemyParty[0].cur_hp - doneDamage;
                 } else {
                     // 減算した結果が0以下の場合は0を現在HPに設定する
-                    enemy.party[0].cur_hp = 0;
-                    simulateEvent.beDead(enemy.party[0], false);
+                    enemyParty[0].cur_hp = 0;
+                    simulateEvent.beDead(enemyParty[0], false);
                 }
                 // HTML上に反映する
-                replace('#enemy_hp', enemy.party[0].cur_hp + ' / ' + enemy.party[0].max_hp);
-                appendSimulateLog(ALLY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + enemy.party[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
+                replace('#enemy_hp', enemyParty[0].cur_hp + ' / ' + enemyParty[0].max_hp);
+                appendSimulateLog(ALLY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + enemyParty[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
                 break;
             case ALLY_SKILL_TYPE.HEAL:
                 if (this.max_hp < this.cur_hp + _effect.amount) {
@@ -265,27 +323,28 @@ function EnemyMember(enemyMem) {
      * 行動する
      */
     this.action = function() {
-        logging('EnemyMember.action', 'start');
+        simulateEvent.appendTurnPressLog(false);
+        // logging('EnemyMember.action', 'start');
         if (turnPressManager.isTurnEnd()) return;
         var skill_index = privateFunc.decideEnemyAction(this.skills);
-        logging('action', 'skill_index : ' + skill_index);
+        // logging('action', 'skill_index : ' + skill_index);
         var _effect = this.skills[skill_index].effect;
 
         switch (_effect.type) {
             case ENEMY_SKILL_TYPE.ATTACK:
                 var doneDamage = simulateEvent.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
-                logging('actionEnemyMem : doneDamage', doneDamage);
-                if (0 < ally.party[0].cur_hp - doneDamage) {
+                // logging('actionEnemyMem : doneDamage', doneDamage);
+                if (0 < allyParty[0].cur_hp - doneDamage) {
                     // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                    ally.party[0].cur_hp = ally.party[0].cur_hp - doneDamage;
+                    allyParty[0].cur_hp = allyParty[0].cur_hp - doneDamage;
                 } else {
                     // 減算した結果が0以下の場合は0を現在HPに設定する
-                    ally.party[0].cur_hp = 0;
-                    simulateEvent.beDead(ally.party[0], true);
+                    allyParty[0].cur_hp = 0;
+                    simulateEvent.beDead(allyParty[0], true);
                 }
                 // HTML上に反映する
-                replace('#ally_hp', ally.party[0].cur_hp + ' / ' + ally.party[0].max_hp);
-                appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + ally.party[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
+                replace('#ally_hp', allyParty[0].cur_hp + ' / ' + allyParty[0].max_hp);
+                appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + allyParty[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
                 break;
             case ENEMY_SKILL_TYPE.HEAL:
                 if (this.max_hp < this.cur_hp + _effect.amount) {
@@ -326,9 +385,9 @@ $.ajax({
 }).then(
     // 通信成功時の処理
     function(data) {
-        loggingObj('ajaxResult : enemy', data);
+        // loggingObj('ajaxResult : enemy', data);
         data.party.forEach(member => enemyParty.push(new EnemyMember(member)));
-        loggingObj('ajaxResult : enemyParty', enemyParty);
+        // loggingObj('ajaxResult : enemyParty', enemyParty);
 
         $.ajax({
             type: "get",
@@ -336,9 +395,9 @@ $.ajax({
             dataType: "json",
         }).then(
             function(data) {
-                loggingObj('ajaxResult : ally', data);
+                // loggingObj('ajaxResult : ally', data);
                 data.party.forEach(member => allyParty.push(new AllyMember(member)));
-                loggingObj('ajaxResult : allyParty', allyParty);
+                // loggingObj('ajaxResult : allyParty', allyParty);
 
                 battleReset();
                 // allyのアクションボタンにイベントリスナー付与
@@ -346,13 +405,13 @@ $.ajax({
             },
             // 通信失敗時の処理
             function() {
-                console.log("ajaxエラー", "allySetting.json failed.");
+                logging("ajaxエラー", "allySetting.json failed.");
             }
         );
     },
     // 通信失敗時の処理
     function() {
-        console.log("ajaxエラー", "enemySetting.json failed.");
+        logging("ajaxエラー", "enemySetting.json failed.");
     }
 );
 
@@ -373,54 +432,52 @@ function replaceAttr(eleId, attrName, value) {
 function battleReset() {
     logging('battleReset @ battleSimulator.js', 'start');
 
-    turnPressManager.initTurn(ally.party);
+    turnPressManager.initTurn(allyParty);
     initMemsStatus();
     turnNum = 0;
-    loggingObj('battleReset : enemy', enemy);
-    loggingObj('battleReset : ally', ally);
+    loggingObj('battleReset : enemyParty', enemyParty);
+    loggingObj('battleReset : allyParty', allyParty);
 
     replace('#battleResult_count_win', battleResult.count_win);
     replace('#battleResult_count_lose', battleResult.count_lose);
 
-    replace('#enemy_name', enemy.party[0].name);
-    replace('#enemy_hp', enemy.party[0].cur_hp + ' / ' + enemy.party[0].max_hp);
-    replace('#enemy_mp', enemy.party[0].cur_mp + ' / ' + enemy.party[0].max_mp);
-    replaceAttr('#i_enemy_hp_meter', 'max', enemy.party[0].max_hp);
-    replaceAttr('#i_enemy_hp_meter', 'value', enemy.party[0].cur_hp);
-    replaceAttr('#i_enemy_mp_meter', 'max', enemy.party[0].max_mp);
-    replaceAttr('#i_enemy_mp_meter', 'value', enemy.party[0].cur_mp);
+    replace('#enemy_name', enemyParty[0].name);
+    replace('#enemy_hp', enemyParty[0].cur_hp + ' / ' + enemyParty[0].max_hp);
+    replace('#enemy_mp', enemyParty[0].cur_mp + ' / ' + enemyParty[0].max_mp);
+    replaceAttr('#i_enemy_hp_meter', 'max', enemyParty[0].max_hp);
+    replaceAttr('#i_enemy_hp_meter', 'value', enemyParty[0].cur_hp);
+    replaceAttr('#i_enemy_mp_meter', 'max', enemyParty[0].max_mp);
+    replaceAttr('#i_enemy_mp_meter', 'value', enemyParty[0].cur_mp);
 
-    for (var i = 0; i < enemy.party[0].skills.length; i++) {
-        replace('#enemy_skill-' + i, enemy.party[0].skills[i].name);
-        replace('#enemy_skill-select-probability-' + i, enemy.party[0].skills[i].probability);
+    for (var i = 0; i < enemyParty[0].skills.length; i++) {
+        replace('#enemy_skill-' + i, enemyParty[0].skills[i].name);
+        replace('#enemy_skill-select-probability-' + i, enemyParty[0].skills[i].probability);
     }
 
-    replace('#ally_name', ally.party[0].name);
-    replace('#ally_hp', ally.party[0].cur_hp + ' / ' + ally.party[0].max_hp);
-    replace('#ally_mp', ally.party[0].cur_mp + ' / ' + ally.party[0].max_mp);
-    replaceAttr('#i_ally_hp_meter', 'max', ally.party[0].max_hp);
-    replaceAttr('#i_ally_hp_meter', 'value', ally.party[0].cur_hp);
-    replaceAttr('#i_ally_mp_meter', 'max', ally.party[0].max_mp);
-    replaceAttr('#i_ally_mp_meter', 'value', ally.party[0].cur_mp);
+    replace('#ally_name', allyParty[0].name);
+    replace('#ally_hp', allyParty[0].cur_hp + ' / ' + allyParty[0].max_hp);
+    replace('#ally_mp', allyParty[0].cur_mp + ' / ' + allyParty[0].max_mp);
+    replaceAttr('#i_ally_hp_meter', 'max', allyParty[0].max_hp);
+    replaceAttr('#i_ally_hp_meter', 'value', allyParty[0].cur_hp);
+    replaceAttr('#i_ally_mp_meter', 'max', allyParty[0].max_mp);
+    replaceAttr('#i_ally_mp_meter', 'value', allyParty[0].cur_mp);
 
-    for (var i = 0; i < ally.party[0].skills.length; i++) {
-        replace('#ally_skill-' + i, ally.party[0].skills[i].name);
-        replace('#ally_skill-limitedTimes-' + i, ally.party[0].skills[i].limitedTimes);
+    for (var i = 0; i < allyParty[0].skills.length; i++) {
+        replace('#ally_skill-' + i, allyParty[0].skills[i].name);
+        replace('#ally_skill-limitedTimes-' + i, allyParty[0].skills[i].limitedTimes);
     }
 }
 
 function initMemsStatus() {
     logging('initMemsStatus @ battleSimulator.js', 'start');
-    enemy.party.forEach(function(enemyMem) {
+    enemyParty.forEach(function(enemyMem) {
         enemyMem.cur_hp = enemyMem.max_hp;
         enemyMem.cur_mp = enemyMem.max_mp;
-        enemyMem.isAlive = true;
     });
 
-    ally.party.forEach(function(allyMem) {
+    allyParty.forEach(function(allyMem) {
         allyMem.cur_hp = allyMem.max_hp;
         allyMem.cur_mp = allyMem.max_mp;
-        allyMem.isAlive = true;
     });
 }
 
@@ -445,25 +502,27 @@ function allyActionButtonMdown(event) {
     // id値の末尾番号から
     var skill_index = parseInt(this.attributes.skill_index.value, 10);
 
-    let allyMem = new AllyMember(ally.party[0]);
+    switchLogBgColor(true);
+    let allyMem = new AllyMember(allyParty[0]);
     allyMem.action(skill_index);
 
     if (turnPressManager.isTurnEnd()) {
         appendSimulateLog('[TURN END]  ALLY');
+        switchLogBgColor(false);
         logging('turnPressManager', 'Turn End');
         actionEnemy();
         appendSimulateLog('[TURN END]  ENEMY');
     }
 
-    replaceAttr('#i_enemy_hp_meter', 'value', enemy.party[0].cur_hp);
-    replaceAttr('#i_enemy_mp_meter', 'value', enemy.party[0].cur_mp);
-    replaceAttr('#i_ally_hp_meter', 'value', ally.party[0].cur_hp);
-    replaceAttr('#i_ally_mp_meter', 'value', ally.party[0].cur_mp);
+    replaceAttr('#i_enemy_hp_meter', 'value', enemyParty[0].cur_hp);
+    replaceAttr('#i_enemy_mp_meter', 'value', enemyParty[0].cur_mp);
+    replaceAttr('#i_ally_hp_meter', 'value', allyParty[0].cur_hp);
+    replaceAttr('#i_ally_mp_meter', 'value', allyParty[0].cur_mp);
 
-    appendLifeGageLog(ally.party[0].name, ally.party[0].cur_hp, ally.party[0].max_hp, turnNum, '#ff6');
-    appendLifeGageLog(enemy.party[0].name, enemy.party[0].cur_hp, enemy.party[0].max_hp, turnNum, '#f36');
+    appendLifeGageLog(allyParty[0].name, allyParty[0].cur_hp, allyParty[0].max_hp, turnNum);
+    appendLifeGageLog(enemyParty[0].name, enemyParty[0].cur_hp, enemyParty[0].max_hp, turnNum);
 
-    judgeFightOut();
+    simulateEvent.judgeFightOut();
     // 二度押し防止用フラグ：落とす
     allyActionButtonMdown_runningFlg = false;
 };
@@ -473,61 +532,25 @@ function allyActionButtonMdown(event) {
  */
 function actionEnemy() {
     // プレスターン状態を初期化（敵側）
-    turnPressManager.initTurn(enemy.party);
+    turnPressManager.initTurn(enemyParty);
     // プレスターンが終了するまで繰り返す
     while (!turnPressManager.isTurnEnd()) {
-        logging('enemy is not end of turn', turnPressManager.isTurnEnd());
+        // logging('enemy is not end of turn', turnPressManager.isTurnEnd());
         // 前回行動したメンバーのIndexを保存する（初期値はパーティの最終Index）
-        var preActedIdx = enemy.party.length - 1;
+        var preActedIdx = enemyParty.length - 1;
         // パーティの数だけ繰り返し、行動可能なメンバーを探す
-        for (var actOrderIdx = 1; actOrderIdx != enemy.party.length + 1; actOrderIdx++) {
+        for (var actOrderIdx = 1; actOrderIdx != enemyParty.length + 1; actOrderIdx++) {
             // 前回行動したメンバーを始点とし、行動可能か判定する
-            var i = (preActedIdx + actOrderIdx) % 3;
-            logging('isActionable', 'index : ' + i + ' is ' + enemy.party[i].isActionable());
-            if (enemy.party[i].isActionable()) {
+            var i = (preActedIdx + actOrderIdx) % enemyParty.length;
+            // logging('isActionable', 'index : ' + i );
+            if (enemyParty[i].isActionable) {
                 preActedIdx = i;
-                logging('actionEnemy', 'index : ' + i);
-                let enemyMem = new EnemyMember(enemy.party[i]);
+                // logging('actionEnemy', 'index : ' + i);
+                let enemyMem = new EnemyMember(enemyParty[i]);
                 enemyMem.action();
                 break;
             }
-
         }
 
     }
-}
-
-function judgeFightOut() {
-    ifLostBattleReset();
-    ifWonBattleReset();
-}
-
-function ifLostBattleReset() {
-    for (var allyMem of ally.party) {
-        logging('allyMem.isAlive', allyMem.isAlive);
-        if (allyMem.isAlive) return;
-    }
-    // 全員死んでいたら負けを表示
-    dispLose();
-}
-
-function ifWonBattleReset() {
-    for (var enemyMem of enemy.party) {
-        logging('enemyMem.isAlive', enemyMem.isAlive);
-        if (enemyMem.isAlive) return;
-    }
-    // 全員死んでいたら勝ちを表示
-    dispWin();
-}
-
-function dispWin() {
-    logging('dispWin', 'start')
-    battleResult.count_win = ++battleResult.count_win;
-    battleReset();
-}
-
-function dispLose() {
-    logging('dispLose', 'start')
-    battleResult.count_lose = ++battleResult.count_lose;
-    battleReset();
 }

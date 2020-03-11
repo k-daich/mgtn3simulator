@@ -152,7 +152,7 @@
     <main>
         <div id="today" class="date">
         </div>
-<!--         <div id="i_situationId" class="c_situationId c_normal_table">
+        <!--         <div id="i_situationId" class="c_situationId c_normal_table">
             <table>
                 <tr>
                     <td id="simulation.id">TODO : disp id</td>
@@ -168,7 +168,8 @@
                 </tr>
             </table>
         </div>
- -->        <div id="i_total_result" class="c_total_result">
+ -->
+        <div id="i_total_result" class="c_total_result">
             <table>
                 <tr>
                     <td><span id="battleResult_count_win"></span><span>勝:</span>
@@ -190,11 +191,12 @@
                             <td><span id="enemy_hp"></span><br><meter id="i_enemy_hp_meter" max="100" value="10"></meter></td>
                             <td><span id="enemy_mp"></span><br><meter id="i_enemy_mp_meter" max="100" value="10"></meter></td>
                         </tr>
-<!--                         <tr class="c_status_meter">
+                        <!--                         <tr class="c_status_meter">
                             <td><meter id="enemy_hp_meter" max="100" value="10"></meter></td>
                             <td id="enemy_mp_meter"></td>
                         </tr>
- -->                        <tr class="c_action">
+ -->
+                        <tr class="c_action">
                             <td id="enemy_skill-0"></td>
                             <td id="enemy_skill-select-probability-0"></td>
                         </tr>
@@ -242,15 +244,23 @@
         </div>
     </main>
     <script type="text/javascript">
-    function appendLifeGageLog(name, curHp, maxHp, turnNum, color) {
-        if (!color) color = '#fff';
-        $('#i_simulateLog').append('<div> ' + turnNum + 'ターン目　： '  + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
+    var _ = {
+        "isAllyTurn" : true,
+    };
+
+    function switchLogBgColor(isAllyTurn) {
+        _.isAllyTurn = isAllyTurn;
+    }
+
+    function appendLifeGageLog(name, curHp, maxHp, turnNum) {
+        $('#i_simulateLog').append('<div> ' + turnNum + 'ターン目　： ' + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
         $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
     }
 
     function appendSimulateLog(text, color) {
         if (!color) color = '#fff';
-        $('#i_simulateLog').append('<div style="color:' + color + '">' + text + '</div>');
+        var bgColor = _.isAllyTurn ? '#644': '#446';
+        $('#i_simulateLog').append('<div style="color:' + color + '; background-color:' + bgColor + '">' + text + '</div>');
     }
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
