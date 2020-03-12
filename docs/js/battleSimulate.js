@@ -231,32 +231,43 @@ function SimulateLogger() {
         "isAllyTurn": true,
     };
 
-    privateFunc.getBgColor = function() {
-        return _.isAllyTurn ? '#446' : '#644';
+    privateFunc.getBgColor = function(isAlly) {
+    	logging('privateFunc.getBgColor', isAlly);
+        if (isAlly !== undefined) return _.isAllyTurn ? '#446' : '#644';
+    	logging('privateFunc.getBgColor', 'judged undefined');
+        return isAlly ? '#446' : '#644';
     }
 
     this.switchLogBgColor = function(isAllyTurn) {
         _.isAllyTurn = isAllyTurn;
     }
 
-    privateFunc.appendLifeGageLog = function(name, curHp, maxHp, turnNum) {
-        $('#i_simulateLog').append('<div style="background-color:' + privateFunc.getBgColor() + '"> ' + turnNum + 'ターン目　： ' + name + ' <meter id="i_enemyHpMeterLog" max="' + maxHp + '" value="' + curHp + '"></meter></div>');
+    privateFunc.appendLifeGageLog = function(turnNum, lifeGageInfoArray) {
+    	loggingObj('privateFunc.appendLifeGageLog' , lifeGageInfoArray)
+        $('#i_simulateLog').append('<span>' + turnNum + 'ターン目　： ');
+        for (var info of lifeGageInfoArray) {
+            $('#i_simulateLog').append('<span style="background-color:' + privateFunc.getBgColor(info.isAlly) + '">' + info.name + ' <meter id="i_enemyHpMeterLog" max="' + info.max_hp + '" value="' + info.cur_hp + '"></meter></span>');
+        }
+        $('#i_simulateLog').append('</span></span><br/>');
         $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
     }
 
+    function LifeGageInfo(member, isAlly) {
+        this.name = member.name;
+        this.cur_hp = member.cur_hp;
+        this.max_hp = member.max_hp;
+        this.isAlly = member.isAlly;
+    }
+
     this.appendAllMemLifeGageLog = function(turnNum) {
-        var allyPartyEndFlg = false;
-        var enemyPartyEndFlg = false;
-        for (var i = 0; true; i++) {
-            // 自陣敵陣どちらも最後までログに書いたら終了する
-            if (allyPartyEndFlg && enemyPartyEndFlg) return;
-            if (i < allyParty.length) {
-                privateFunc.appendLifeGageLog(allyParty[i].name, allyParty[i].cur_hp, allyParty[i].max_hp, turnNum);
-            } else { allyPartyEndFlg = true; }
-            if (i < enemyParty.length) {
-                privateFunc.appendLifeGageLog(enemyParty[i].name, enemyParty[i].cur_hp, enemyParty[i].max_hp, turnNum);
-            } else { enemyPartyEndFlg = true; }
+        var lifeGageInfoArray = new Array();
+        for (var allyMem of allyParty) {
+            lifeGageInfoArray.push(new LifeGageInfo(allyMem, true));
         }
+        for (var enemyMem of enemyParty) {
+            lifeGageInfoArray.push(new LifeGageInfo(enemyMem, false));
+        }
+        privateFunc.appendLifeGageLog(turnNum, lifeGageInfoArray);
     }
 
     this.appendSimulateLog = function(text, color) {
@@ -275,6 +286,7 @@ function AllyMember(allyMem) {
     this.cur_mp = allyMem.cur_mp;
     this.resistance = allyMem.resistance;
     this.skills = allyMem.skills;
+    this.isAlly = true;
 
     /**
      * 生きているかを返す
@@ -342,6 +354,7 @@ function EnemyMember(enemyMem) {
     this.cur_mp = enemyMem.cur_mp;
     this.resistance = enemyMem.resistance;
     this.skills = enemyMem.skills;
+    this.isAlly = false;
 
     var privateFunc = {};
 
