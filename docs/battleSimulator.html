@@ -97,6 +97,11 @@
             white-space: nowrap;
         }
 
+        .c_simulateLog_details {
+            position : relative;
+            margin-left : 30px;
+        }
+
         /* スクロールの幅の指定 */
         .c_simulateLog::-webkit-scrollbar {
           width: 10px;
@@ -153,23 +158,6 @@
     <main>
         <div id="today" class="date">
         </div>
-        <!--         <div id="i_situationId" class="c_situationId c_normal_table">
-            <table>
-                <tr>
-                    <td id="simulation.id">TODO : disp id</td>
-                </tr>
-                <tr>
-                    <td><a href="/app/mgtn3simulator/getSituation?situationId=1001">1001</a></td>
-                </tr>
-                <tr>
-                    <td><a href="/app/mgtn3simulator/getSituation?situationId=1002">1002</a></td>
-                </tr>
-                <tr>
-                    <td><a href="/app/mgtn3simulator/getSituation?situationId=1003">1003</a></td>
-                </tr>
-            </table>
-        </div>
- -->
         <div id="i_total_result" class="c_total_result">
             <table>
                 <tr>
@@ -192,11 +180,6 @@
                             <td><span id="enemy_hp"></span><br><meter id="i_enemy_hp_meter" max="100" value="10"></meter></td>
                             <td><span id="enemy_mp"></span><br><meter id="i_enemy_mp_meter" max="100" value="10"></meter></td>
                         </tr>
-                        <!--                         <tr class="c_status_meter">
-                            <td><meter id="enemy_hp_meter" max="100" value="10"></meter></td>
-                            <td id="enemy_mp_meter"></td>
-                        </tr>
- -->
                         <tr class="c_action">
                             <td id="enemy_skill-0"></td>
                             <td id="enemy_skill-select-probability-0"></td>
