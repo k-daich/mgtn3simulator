@@ -182,45 +182,25 @@ function SimulateEvent() {
         }
     }
 
-    this.judgeFightOut = function() {
-        privateFunc.ifLostBattleReset();
-        privateFunc.ifWonBattleReset();
-    }
-
-    privateFunc.ifLostBattleReset = function() {
+    this.isLose = function() {
         for (var allyMem of allyParty) {
             // logging('allyMem.isAlive', allyMem.isAlive());
-            if (allyMem.isAlive()) return;
+            if (allyMem.isAlive()) return false;
         }
-        // 全員死んでいたら負けを表示
-        privateFunc.dispLose();
+        return true;
     }
 
-    privateFunc.ifWonBattleReset = function() {
+    this.isWin = function() {
         for (var enemyMem of enemyParty) {
             // logging('enemyMem.isAlive', enemyMem.isAlive());
-            if (enemyMem.isAlive()) return;
+            if (enemyMem.isAlive()) return false;
         }
-        // 全員死んでいたら勝ちを表示
-        privateFunc.dispWin();
-    }
-
-    privateFunc.dispWin = function() {
-        // logging('dispWin', 'start')
-        battleResult.count_win = ++battleResult.count_win;
-        battleReset();
-    }
-
-    privateFunc.dispLose = function() {
-        // logging('dispLose', 'start')
-        battleResult.count_lose = ++battleResult.count_lose;
-        battleReset();
+        return true;
     }
 
     this.appendTurnPressLog = function(isAlly) {
         smltrLggr.appendSimulateLog(trnPrssMngr.toString(isAlly), '#ccc');
     }
-
 
     /**
      * 敵側の1ターンアクション
@@ -243,6 +223,7 @@ function SimulateEvent() {
                     // logging('actionEnemy', 'index : ' + i);
                     let enemyMem = new EnemyMember(enemyParty[i]);
                     enemyMem.action();
+                    smltrLggr.appendAllMemLifeGageLog(turnNum);
                     break;
                 }
             }
@@ -261,9 +242,9 @@ function SimulateLogger() {
     };
 
     privateFunc.getBgColor = function(isAlly) {
-        logging('privateFunc.getBgColor', isAlly);
+        // logging('privateFunc.getBgColor', isAlly);
         if (isAlly == undefined) return _.isAllyTurn ? '#446' : '#644';
-        logging('privateFunc.getBgColor', 'judged undefined');
+        // logging('privateFunc.getBgColor', 'judged undefined');
         return isAlly ? '#446' : '#644';
     }
 
@@ -271,22 +252,25 @@ function SimulateLogger() {
         _.isAllyTurn = isAllyTurn;
     }
 
+    privateFunc.append = function(content) {
+        $('#i_simulateLog').append(content);
+    }
+
     this.appendTurnPartition = function(turnNum) {
-        $('#i_simulateLog').append('<span>' + turnNum + 'ターン目　： ');
+        privateFunc.append('<div>' + turnNum + 'ターン目</div>');
     }
 
     this.switchActionSide = function(isAllyTurn) {
-    	privateFunc.switchLogBgColor(isAllyTurn);
-        $('#i_simulateLog').append('<span>' + isAllyTurn ? 'ALLY TURN' : 'ENEMY TURN' + '　： ');
+        privateFunc.switchLogBgColor(isAllyTurn);
     }
 
     privateFunc.appendLifeGageLog = function(turnNum, lifeGageInfoArray) {
         loggingObj('privateFunc.appendLifeGageLog', lifeGageInfoArray)
-        $('#i_simulateLog').append('<span class="c_simulateLog_details">' + turnNum + 'ターン目　： ');
+        privateFunc.append('<span class="c_simulateLog_details">');
         for (var info of lifeGageInfoArray) {
             $('#i_simulateLog').append('<span style="background-color:' + privateFunc.getBgColor(info.isAlly) + '">' + info.name + ' <meter id="i_enemyHpMeterLog" max="' + info.max_hp + '" value="' + info.cur_hp + '"></meter></span>');
         }
-        $('#i_simulateLog').append('</span></span><br/>');
+        privateFunc.append('</span></span><br/>');
         $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
     }
 
@@ -529,10 +513,12 @@ function replaceAttr(eleId, attrName, value) {
 
 function battleReset() {
     logging('battleReset @ battleSimulator.js', 'start');
+    turnNum = 1;
 
     trnPrssMngr.initTurn(allyParty);
+    smltrLggr.appendTurnPartition(turnNum);
+    smltrLggr.switchActionSide(true);
     initMemsStatus();
-    turnNum = 1;
     loggingObj('battleReset : enemyParty', enemyParty);
     loggingObj('battleReset : allyParty', allyParty);
 
@@ -580,50 +566,56 @@ function initMemsStatus() {
 }
 
 var allyActionButtonMdown_runningFlg = false;
+
 /**
  * allyアクションボタン押下時の処理を実装する
  */
 function allyActionButtonMdown(event) {
-    if (allyActionButtonMdown_runningFlg) {
-        logging("Error", "doublicate pushed button");
-        return;
-    }
-    // 二度押し防止用フラグ：立てる
-    allyActionButtonMdown_runningFlg = true;
+    try {
+        if (allyActionButtonMdown_runningFlg) {
+            logging("Error", "doublicate pushed button");
+            return;
+        }
+        // 二度押し防止用フラグ：立てる
+        allyActionButtonMdown_runningFlg = true;
 
-    // 使用回数をデクリメントする
-    var dcrmntNum = parseInt(this.textContent, 10) - 1;
-    replace('#' + this.id, dcrmntNum);
+        // 使用回数をデクリメントする
+        var dcrmntNum = parseInt(this.textContent, 10) - 1;
+        replace('#' + this.id, dcrmntNum);
 
-    // 効果の反映を行う
-    // id値の末尾番号から
-    var skill_index = parseInt(this.attributes.skill_index.value, 10);
+        // 効果の反映を行う
+        // id値の末尾番号から
+        var skill_index = parseInt(this.attributes.skill_index.value, 10);
 
-    smltrLggr.switchActionSide(true);
-    smltrLggr.appendAllMemLifeGageLog(turnNum);
-    let allyMem = new AllyMember(allyParty[0]);
-    allyMem.action(skill_index);
-    smltrLggr.appendAllMemLifeGageLog(turnNum);
-
-    if (trnPrssMngr.isTurnEnd()) {
-        smltrLggr.appendSimulateLog('[TURN END]  ALLY');
+        let allyMem = new AllyMember(allyParty[0]);
+        allyMem.action(skill_index);
         smltrLggr.appendAllMemLifeGageLog(turnNum);
-        smltrLggr.switchActionSide(false);
-        logging('trnPrssMngr', 'Turn End');
-        smltrEvnt.actEnemyTurn();
-        smltrLggr.appendAllMemLifeGageLog(turnNum);
-        smltrLggr.appendSimulateLog('[TURN END]  ENEMY');
-        turnNum++;
+
+        if (trnPrssMngr.isTurnEnd()) {
+            smltrLggr.switchActionSide(false);
+            logging('trnPrssMngr', 'Turn End');
+            smltrEvnt.actEnemyTurn();
+            if (smltrEvnt.isWin()) {
+                battleResult.count_win = ++battleResult.count_win;
+                battleReset();
+                return;
+            } else if (smltrEvnt.isLose()) {
+                battleResult.count_lose = ++battleResult.count_lose;
+                battleReset();
+                return;
+            }
+            smltrLggr.appendTurnPartition(turnNum);
+            smltrLggr.switchActionSide(true);
+            turnNum++;
+        }
+
+        replaceAttr('#i_enemy_hp_meter', 'value', enemyParty[0].cur_hp);
+        replaceAttr('#i_enemy_mp_meter', 'value', enemyParty[0].cur_mp);
+        replaceAttr('#i_ally_hp_meter', 'value', allyParty[0].cur_hp);
+        replaceAttr('#i_ally_mp_meter', 'value', allyParty[0].cur_mp);
+
+    } finally {
+        // 二度押し防止用フラグ：落とす
+        allyActionButtonMdown_runningFlg = false;
     }
-
-    replaceAttr('#i_enemy_hp_meter', 'value', enemyParty[0].cur_hp);
-    replaceAttr('#i_enemy_mp_meter', 'value', enemyParty[0].cur_mp);
-    replaceAttr('#i_ally_hp_meter', 'value', allyParty[0].cur_hp);
-    replaceAttr('#i_ally_mp_meter', 'value', allyParty[0].cur_mp);
-
-    smltrLggr.appendAllMemLifeGageLog(turnNum);
-
-    smltrEvnt.judgeFightOut();
-    // 二度押し防止用フラグ：落とす
-    allyActionButtonMdown_runningFlg = false;
 };
