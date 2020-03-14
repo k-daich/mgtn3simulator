@@ -146,22 +146,43 @@ function SimulateEvent() {
         return Math.random() * 101 < criticalRate;
     }
 
-    this.attack = function(damage, hitRate, criticalRate) {
-        logging('SimulateEvent.attack', 'start');
-        logging('SimulateEvent.attack', ' param:' + damage + ',' + hitRate + ',' + criticalRate);
-
-        if (privateFunc.isHit(hitRate)) {
-            logging('SimulateEvent.attack', 'hitted');
-            if (privateFunc.isCritical(criticalRate)) {
-                logging('SimulateEvent.attack', 'criticaled');
+    this.attack = function(src, dest, skill_index) {
+        var skill = src.skills[skill_index];
+        var effect = skill.effect;
+        var doneDamage = null;
+        // hitした場合
+        if (privateFunc.isHit(effect.hitRate)) {
+            // critical hitした場合
+            if (privateFunc.isCritical(effect.criticalRate)) {
+                // logging('SimulateEvent.attack', 'criticaled');
                 trnPrssMngr.decrementTurn.half();
-                return damage * 1.5;
+                doneDamage = effect.damage * 1.5;
+                smltrLggr.appendSimulateLog(effect.type + ' Critical Hit! ' + src.name + 'は' + dest.name + 'に' + skill.name + '。' + doneDamage + 'のダメージを与えた。');
             }
+            // logging('SimulateEvent.attack', 'hitted');
             trnPrssMngr.decrementTurn.one();
-            return damage;
+            doneDamage = effect.damage;
+            smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + skill.name + '。' + doneDamage + 'のダメージを与えた。');
         }
-        trnPrssMngr.decrementTurn.two();
-        return 0;
+        // hitしなかった場合
+        else {
+            trnPrssMngr.decrementTurn.two();
+            doneDamage = 0;
+            smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + skill.name + '。' + 'だが攻撃は外れた。');
+        }
+
+        var beDeadflg = false;
+        if (0 < dest.cur_hp - doneDamage) {
+            // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
+            dest.cur_hp = dest.cur_hp - doneDamage;
+        } else {
+            // 減算した結果が0以下の場合は0を現在HPに設定する
+            dest.cur_hp = 0;
+            beDeadflg = true;
+        }
+        // HTML上に反映する
+        replace('#enemy_hp', dest.cur_hp + ' / ' + dest.max_hp);
+        if (beDeadflg) smltrEvnt.printDiedLog(dest);
     }
 
     this.decrementMp = function(member, costMp) {
@@ -174,8 +195,8 @@ function SimulateEvent() {
         }
     }
 
-    this.printDiedLog = function(member, isAlly) {
-        if (isAlly) {
+    this.printDiedLog = function(member) {
+        if (member.isAlly) {
             smltrLggr.appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#f36');
         } else {
             smltrLggr.appendSimulateLog('[DEAD]   ' + member.name + 'は力尽きた。', '#ff9');
@@ -300,14 +321,26 @@ function SimulateLogger() {
 
 const smltrLggr = new SimulateLogger();
 
-function AllyMember(allyMem) {
-    this.name = allyMem.name;
-    this.max_hp = allyMem.max_hp;
-    this.cur_hp = allyMem.cur_hp;
-    this.max_mp = allyMem.max_mp;
-    this.cur_mp = allyMem.cur_mp;
-    this.resistance = allyMem.resistance;
-    this.skills = allyMem.skills;
+function Member(member) {
+    this.name = member.name;
+    this.max_hp = member.max_hp;
+    this.cur_hp = member.cur_hp;
+    this.max_mp = member.max_mp;
+    this.cur_mp = member.cur_mp;
+    this.resistance = member.resistance;
+    this.skills = member.skills;
+    this.isAlly = true;
+}
+
+var AllyMember = function(allyMem) {
+    this.prototype = new Member(allyMem);
+    // this.name = allyMem.name;
+    // this.max_hp = allyMem.max_hp;
+    // this.cur_hp = allyMem.cur_hp;
+    // this.max_mp = allyMem.max_mp;
+    // this.cur_mp = allyMem.cur_mp;
+    // this.resistance = allyMem.resistance;
+    // this.skills = allyMem.skills;
     this.isAlly = true;
 
     /**
@@ -330,23 +363,9 @@ function AllyMember(allyMem) {
 
         switch (_effect.type) {
             case ALLY_SKILL_TYPE.ATTACK:
-                var doneDamage = smltrEvnt.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
-                var beDeadflg = false;
-                // logging('actionEnemyMem : doneDamage', doneDamage);
-
-                if (0 < enemyParty[0].cur_hp - doneDamage) {
-                    // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                    enemyParty[0].cur_hp = enemyParty[0].cur_hp - doneDamage;
-                } else {
-                    // 減算した結果が0以下の場合は0を現在HPに設定する
-                    enemyParty[0].cur_hp = 0;
-                    beDeadflg = true;
-                }
-                // HTML上に反映する
-                replace('#enemy_hp', enemyParty[0].cur_hp + ' / ' + enemyParty[0].max_hp);
-                smltrLggr.appendSimulateLog(ALLY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + enemyParty[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
-                if (beDeadflg) smltrEvnt.printDiedLog(enemyParty[0], false);
+                var doneDamage = smltrEvnt.attack(this, enemyParty[0], skill_index);
                 break;
+
             case ALLY_SKILL_TYPE.HEAL:
                 if (this.max_hp < this.cur_hp + _effect.amount) {
                     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
@@ -359,8 +378,8 @@ function AllyMember(allyMem) {
                 // HTML上に反映する
                 replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
                 smltrLggr.appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + this.skills[skill_index].name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
-
                 break;
+
             default:
                 logging('actionAlly', 'Error. _effect.type is not found.');
                 break;
@@ -369,13 +388,14 @@ function AllyMember(allyMem) {
 }
 
 function EnemyMember(enemyMem) {
-    this.name = enemyMem.name;
-    this.max_hp = enemyMem.max_hp;
-    this.cur_hp = enemyMem.cur_hp;
-    this.max_mp = enemyMem.max_mp;
-    this.cur_mp = enemyMem.cur_mp;
-    this.resistance = enemyMem.resistance;
-    this.skills = enemyMem.skills;
+    this.prototype = new Member(enemyMem);
+    // this.name = enemyMem.name;
+    // this.max_hp = enemyMem.max_hp;
+    // this.cur_hp = enemyMem.cur_hp;
+    // this.max_mp = enemyMem.max_mp;
+    // this.cur_mp = enemyMem.cur_mp;
+    // this.resistance = enemyMem.resistance;
+    // this.skills = enemyMem.skills;
     this.isAlly = false;
 
     var privateFunc = {};
@@ -411,7 +431,7 @@ function EnemyMember(enemyMem) {
 
         switch (_effect.type) {
             case ENEMY_SKILL_TYPE.ATTACK:
-                var doneDamage = smltrEvnt.attack(_effect.damage, _effect.hitRate, _effect.criticalRate);
+                var doneDamage = smltrEvnt.attack(this, allyParty[0], skill_index);
                 var beDeadflg = false;
                 // logging('actionEnemyMem : doneDamage', doneDamage);
                 if (0 < allyParty[0].cur_hp - doneDamage) {
