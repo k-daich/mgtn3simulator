@@ -181,6 +181,7 @@ function SimulateEvent() {
         }
         // HTML上に反映する
         var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
+        logging('replace hp : id', hpId);
         replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
         if (beDeadflg) smltrEvnt.printDiedLog(dest);
     }
@@ -253,7 +254,6 @@ function SimulateEvent() {
         }
     }
 }
-
 const smltrEvnt = new SimulateEvent();
 
 function SimulateLogger() {
@@ -323,13 +323,13 @@ function SimulateLogger() {
 const smltrLggr = new SimulateLogger();
 
 function Member() {
-    // this.name = member.name;
-    // this.max_hp = member.max_hp;
-    // this.cur_hp = member.cur_hp;
-    // this.max_mp = member.max_mp;
-    // this.cur_mp = member.cur_mp;
-    // this.resistance = member.resistance;
-    // this.skills = member.skills;
+    // name = member.name;
+    // max_hp = member.max_hp;
+    // cur_hp = member.cur_hp;
+    // max_mp = member.max_mp;
+    // cur_mp = member.cur_mp;
+    // resistance = member.resistance;
+    // skills = member.skills;
     // // this.isAlly = true;
 }
 
@@ -502,13 +502,19 @@ function replace(eleId, text) {
     tg_ele = $(eleId);
     // loggingObj('replaceBefore : ' + eleId, text);
     if (!tg_ele) logging('Error @ replace' + document.currentScript, 'not found by id : ' + eleId);
+    tg_ele.addClass("animate-glow").one('animationend' , function() {
+    	$(eleId).removeClass("animate-glow");
+    });
     tg_ele.text(text);
     // loggingObj('replaceAfter : ' + eleId, tg_ele);
 };
 
 function removeAll_AnimateGlow() {
-    $('.animate_glow').each(function() {
-        this.addClass("animate_glow");
+    // logging('removeAll_AnimateGlow', 'start');
+    $('.animate-glow').each(function(index, element) {
+        // loggingObj('removeAll_AnimateGlow : before', $(element));
+        // $(element).removeClass('animate-glow');
+        // loggingObj('removeAll_AnimateGlow : after', $(element));
     });
 }
 
@@ -522,6 +528,7 @@ function battleReset() {
     logging('battleReset @ battleSimulator.js', 'start');
     turnNum = 1;
 
+    removeAll_AnimateGlow();
     trnPrssMngr.initTurn(allyParty);
     smltrLggr.appendTurnPartition(turnNum);
     smltrLggr.switchActionSide(true);
@@ -585,10 +592,11 @@ function allyActionButtonMdown(event) {
         }
         // 二度押し防止用フラグ：立てる
         allyActionButtonMdown_runningFlg = true;
-
+removeAll_AnimateGlow();
         // 使用回数をデクリメントする
         var dcrmntNum = parseInt(this.textContent, 10) - 1;
         replace('#' + this.id, dcrmntNum);
+
 
         // 効果の反映を行う
         // id値の末尾番号から

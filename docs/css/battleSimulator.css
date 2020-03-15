@@ -95,24 +95,19 @@ td {
     font-size: 1.2rem;
 }
 
-.c_hp {
-}
-
 @keyframes glow {
-    0% {
-        background: red;
+    0%,
+    100% {
+        opacity: 0;
     }
 
     50% {
-        background: orange;
-    }
-
-    100% {
-        background: pink;
+        opacity: 1;
     }
 }
 
-.animate_glow {
+.animate-glow {
     /* 1回だけ2秒の間glowアニメーション実施 */
-    animation: glow 1s 1;
+    animation: glow 0.5s 1;
+    background: #B00;
 }
