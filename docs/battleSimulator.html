@@ -26,29 +26,6 @@
         console.dir(object);
     }
 
-    /**
-     * srcの読み込みを待ってからcallbackを実行する
-     */
-    function loadScript(src, callback) {
-        var done = false;
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.createElement('script');
-        script.src = src;
-        head.appendChild(script);
-        // Attach handlers for all browsers
-        script.onload = script.onreadystatechange = function() {
-            if (!done && (!this.readyState ||
-                    this.readyState === "loaded" || this.readyState === "complete")) {
-                done = true;
-                callback();
-                // Handle memory leak in IE
-                script.onload = script.onreadystatechange = null;
-                if (head && script.parentNode) {
-                    head.removeChild(script);
-                }
-            }
-        };
-    }
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/jquery-3.4.1.js"></script>
     <script type="text/javascript" src="/mgtn3simulator/js/setToday.js"></script>
@@ -122,17 +99,14 @@
                 </div>
             </div>
         </div>
-        <div id="i_allyParty_box" class="c_allyParty_box">
-            <div id="i_ally_box" class="c_ally_box">
-            </div>
+        <div  class="c_simulate-mode">
+            <span>Auto Battle</span>
+            <button id="i_auto-battle-btn" class="c_auto-battle-btn">start</button>
         </div>
         <div class="title">
             <h2>simulator</h2>
         </div>
     </main>
-    <script type="text/javascript">
-    </script>
     <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
 </body>
-
 </html>

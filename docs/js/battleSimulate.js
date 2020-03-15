@@ -483,8 +483,10 @@ $.ajax({
                 // loggingObj('ajaxResult : allyParty', allyParty);
 
                 battleReset();
-                // allyのアクションボタンにイベントリスナー付与
+                // allyのアクションボタンにイベントリスナーを付与
                 $('.ally-action-button').on('click', allyActionButtonMdown);
+                // AutoBattleボタンにイベントリスナーを付与
+                $('#i_auto-battle-btn').on('click', autoBattle.switchMode);
             },
             // 通信失敗時の処理
             function() {
@@ -502,8 +504,8 @@ function replace(eleId, text) {
     tg_ele = $(eleId);
     // loggingObj('replaceBefore : ' + eleId, text);
     if (!tg_ele) logging('Error @ replace' + document.currentScript, 'not found by id : ' + eleId);
-    tg_ele.addClass("animate-glow").one('animationend' , function() {
-    	$(eleId).removeClass("animate-glow");
+    tg_ele.addClass("animate-glow").one('animationend', function() {
+        $(eleId).removeClass("animate-glow");
     });
     tg_ele.text(text);
     // loggingObj('replaceAfter : ' + eleId, tg_ele);
@@ -592,7 +594,7 @@ function allyActionButtonMdown(event) {
         }
         // 二度押し防止用フラグ：立てる
         allyActionButtonMdown_runningFlg = true;
-removeAll_AnimateGlow();
+        removeAll_AnimateGlow();
         // 使用回数をデクリメントする
         var dcrmntNum = parseInt(this.textContent, 10) - 1;
         replace('#' + this.id, dcrmntNum);
@@ -634,3 +636,29 @@ removeAll_AnimateGlow();
         allyActionButtonMdown_runningFlg = false;
     }
 };
+
+function AutoBattle() {
+	var privateFunc = {};
+	var isAutoRunning = false;
+
+	privateFunc.actOneAlly = function() {
+		$('#ally_skill-0 button').click();
+	}
+
+    /**
+     * allyアクションボタン押下時の処理を実装する
+     */
+    this.switchMode = function(event) {
+        if (this.textContent == 'start') {
+            isAutoRunning = true;
+            replace('#i_auto-battle-btn', 'end');
+            while(isAutoRunning) {
+            	setInterval(1000, privateFunc.actOneAlly());
+            }
+        } else {
+            isAutoRunning = false;
+            replace('#i_auto-battle-btn', 'start');
+        }
+    }
+}
+const autoBattle = new AutoBattle();
