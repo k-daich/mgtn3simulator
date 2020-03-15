@@ -24,7 +24,6 @@ var ATK_RESULT = {
     ABSORP: 5,
 }
 
-
 var battleResult = {
     "count_win": 0,
     "count_lose": 0
@@ -181,7 +180,8 @@ function SimulateEvent() {
             beDeadflg = true;
         }
         // HTML上に反映する
-        replace('#enemy_hp', dest.cur_hp + ' / ' + dest.max_hp);
+        var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
+        replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
         if (beDeadflg) smltrEvnt.printDiedLog(dest);
     }
 
@@ -229,6 +229,7 @@ function SimulateEvent() {
     this.actEnemyTurn = function() {
         // プレスターン状態を初期化（敵側）
         trnPrssMngr.initTurn(enemyParty);
+        logging('actEnemyTurn', 'init');
         // プレスターンが終了するまで繰り返す
         while (!trnPrssMngr.isTurnEnd()) {
             // logging('enemy is not end of turn', trnPrssMngr.isTurnEnd());
@@ -321,37 +322,46 @@ function SimulateLogger() {
 
 const smltrLggr = new SimulateLogger();
 
-function Member(member) {
-    this.name = member.name;
-    this.max_hp = member.max_hp;
-    this.cur_hp = member.cur_hp;
-    this.max_mp = member.max_mp;
-    this.cur_mp = member.cur_mp;
-    this.resistance = member.resistance;
-    this.skills = member.skills;
-    this.isAlly = true;
+function Member() {
+    // this.name = member.name;
+    // this.max_hp = member.max_hp;
+    // this.cur_hp = member.cur_hp;
+    // this.max_mp = member.max_mp;
+    // this.cur_mp = member.cur_mp;
+    // this.resistance = member.resistance;
+    // this.skills = member.skills;
+    // // this.isAlly = true;
 }
 
-var AllyMember = function(allyMem) {
-    this.prototype = new Member(allyMem);
-    // this.name = allyMem.name;
-    // this.max_hp = allyMem.max_hp;
-    // this.cur_hp = allyMem.cur_hp;
-    // this.max_mp = allyMem.max_mp;
-    // this.cur_mp = allyMem.cur_mp;
-    // this.resistance = allyMem.resistance;
-    // this.skills = allyMem.skills;
-    this.isAlly = true;
-
+Member.prototype = {
     /**
      * 生きているかを返す
      */
-    this.isAlive = function() {
+    isAlive: function() {
         if (this.cur_hp == 0) {
             return false;
         }
         return true;
-    }
+    },
+
+    /**
+     * 行動可否を返す
+     */
+    isActionable: function() {
+        // TODO : implements other factor
+        return this.isAlive();
+    },
+}
+
+var AllyMember = function(allyMem) {
+    this.name = allyMem.name;
+    this.max_hp = allyMem.max_hp;
+    this.cur_hp = allyMem.cur_hp;
+    this.max_mp = allyMem.max_mp;
+    this.cur_mp = allyMem.cur_mp;
+    this.resistance = allyMem.resistance;
+    this.skills = allyMem.skills;
+    this.isAlly = true;
 
     /**
      * 行動する
@@ -386,37 +396,20 @@ var AllyMember = function(allyMem) {
         }
     }
 }
+AllyMember.prototype = new Member();
 
 function EnemyMember(enemyMem) {
-    this.prototype = new Member(enemyMem);
-    // this.name = enemyMem.name;
-    // this.max_hp = enemyMem.max_hp;
-    // this.cur_hp = enemyMem.cur_hp;
-    // this.max_mp = enemyMem.max_mp;
-    // this.cur_mp = enemyMem.cur_mp;
-    // this.resistance = enemyMem.resistance;
-    // this.skills = enemyMem.skills;
+    // this.prototype = new Member(enemyMem);
+    this.name = enemyMem.name;
+    this.max_hp = enemyMem.max_hp;
+    this.cur_hp = enemyMem.cur_hp;
+    this.max_mp = enemyMem.max_mp;
+    this.cur_mp = enemyMem.cur_mp;
+    this.resistance = enemyMem.resistance;
+    this.skills = enemyMem.skills;
     this.isAlly = false;
 
     var privateFunc = {};
-
-    /**
-     * 生きているかを返す
-     */
-    this.isAlive = function() {
-        if (this.cur_hp == 0) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 行動可否を返す
-     */
-    this.isActionable = function() {
-        // TODO : implements other factor
-        return this.isAlive();
-    }
 
     /**
      * 行動する
@@ -426,27 +419,14 @@ function EnemyMember(enemyMem) {
         // logging('EnemyMember.action', 'start');
         if (trnPrssMngr.isTurnEnd()) return;
         var skill_index = privateFunc.decideEnemyAction(this.skills);
-        // logging('action', 'skill_index : ' + skill_index);
+        logging('action', 'skill_index : ' + skill_index);
         var _effect = this.skills[skill_index].effect;
 
         switch (_effect.type) {
             case ENEMY_SKILL_TYPE.ATTACK:
                 var doneDamage = smltrEvnt.attack(this, allyParty[0], skill_index);
-                var beDeadflg = false;
-                // logging('actionEnemyMem : doneDamage', doneDamage);
-                if (0 < allyParty[0].cur_hp - doneDamage) {
-                    // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-                    allyParty[0].cur_hp = allyParty[0].cur_hp - doneDamage;
-                } else {
-                    // 減算した結果が0以下の場合は0を現在HPに設定する
-                    allyParty[0].cur_hp = 0;
-                    beDeadflg = true;
-                }
-                // HTML上に反映する
-                replace('#ally_hp', allyParty[0].cur_hp + ' / ' + allyParty[0].max_hp);
-                smltrLggr.appendSimulateLog(ENEMY_SKILL_TYPE.ATTACK + ' ' + this.name + 'は' + allyParty[0].name + 'に' + this.skills[skill_index].name + '。' + doneDamage + 'のダメージを与えた。');
-                if (beDeadflg) smltrEvnt.printDiedLog(allyParty[0], true);
                 break;
+
             case ENEMY_SKILL_TYPE.HEAL:
                 if (this.max_hp < this.cur_hp + _effect.amount) {
                     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
@@ -479,6 +459,7 @@ function EnemyMember(enemyMem) {
         alert('Error @ battolesSimulate.js decideEnemyAction() rndmNum : ' + rndmNum + ',totalProbability : ' + totalProbability);
     }
 }
+EnemyMember.prototype = new Member();
 
 $.ajax({
     type: "get",
@@ -524,6 +505,12 @@ function replace(eleId, text) {
     tg_ele.text(text);
     // loggingObj('replaceAfter : ' + eleId, tg_ele);
 };
+
+function removeAll_AnimateGlow() {
+    $('.animate_glow').each(function() {
+        this.addClass("animate_glow");
+    });
+}
 
 function replaceAttr(eleId, attrName, value) {
     // loggingObj('replaceAttrBefore : ' + eleId, 'attrName : ' + attrName + ', value : ' + value);

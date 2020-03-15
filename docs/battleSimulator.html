@@ -52,106 +52,9 @@
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/jquery-3.4.1.js"></script>
     <script type="text/javascript" src="/mgtn3simulator/js/setToday.js"></script>
+    <link rel="stylesheet" href="/mgtn3simulator/css/battleSimulator.css">
     <meta charset="utf-8" />
     <title>mgtn3simulator</title>
-    <style>
-        :root {
-            --baseColor: rgba(238,238,238,1);
-            --baseColor_bg: rgb(23, 24, 28);
-            --baseColor_border: rgb(88 ,88 ,88);
-        }
-
-        html {
-            font-size : 15px;
-        }
-
-        body {
-            color : var(--baseColor);
-            font-family: "ＭＳ 明朝",sans-serif;
-            font-family:"ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
-            /*background : -webkit-radial-gradient(center top, ellipse cover, rgba(32,74,135,0.8) 20%,rgba(0,0,0,0));*/
-            /*background-image : radial-gradient(ellipse at center top, rgba(32,74,135,0.8) 20%, rgba(0,0,0,0) 100%);*/
-            background: var(--baseColor_bg);
-        }
-
-        .date {
-            position : absolute;
-            top : 2vh;
-            right : 4vw;
-        }
-
-        .title {
-            position : fixed;
-            bottom : 4vh;
-            right : 10vw;
-        }
-
-        .c_simulateLog {
-            position : absolute;
-            top : 70vh;
-            right : 3vw;
-            height : 30vh;
-            width : 90vw;
-            overflow : scroll;
-            font-size : 0.8rem;
-            white-space: nowrap;
-        }
-
-        .c_simulateLog_details {
-            position : relative;
-            margin-left : 15px;
-        }
-
-        /* スクロールの幅の指定 */
-        .c_simulateLog::-webkit-scrollbar {
-          width: 10px;
-          height: 10px;
-        }
-
-        /* スクロールの背景の設定 */
-        .c_simulateLog::-webkit-scrollbar-track {
-          border-radius: 5px;
-          box-shadow: 0 0 4px #aaa inset;
-        }
-
-        /* スクロールのつまみ部分の設定 */
-        .c_simulateLog::-webkit-scrollbar-thumb {
-          border-radius: 5px;
-          background: #402566;
-        }
-
-        .c_normal_table {
-            border-style: solid;
-            padding: 0px 10px;
-            text-align : center;
-        }
-
-        .c_normal_table th ,td {
-            border-style: solid;
-            padding: 0px 2px;
-        }
-
-        .c_total_result {
-            position : absolute;
-            top : 5vh;
-            right : 4vw;
-        }
-
-        .c_common_party_box_wrap {
-            /*width : 100vw;*/
-        }
-
-        .c_common_box {
-            margin : 5vh auto;
-            width : 40vw;
-            height : 30vh;
-        }
-
-        .c_name {
-            font-size : 1.2rem;
-        }
-
-    </style>
 </head>
 
 <body>
@@ -177,7 +80,7 @@
                             <td id="enemy_name"></td>
                         </tr>
                         <tr class="c_status">
-                            <td><span id="enemy_hp"></span><br><meter id="i_enemy_hp_meter" max="100" value="10"></meter></td>
+                            <td class="c_hp"><span id="enemy_hp"></span><br><meter id="i_enemy_hp_meter" max="100" value="10"></meter></td>
                             <td><span id="enemy_mp"></span><br><meter id="i_enemy_mp_meter" max="100" value="10"></meter></td>
                         </tr>
                         <tr class="c_action">
@@ -204,7 +107,7 @@
                             <td id="ally_name"></td>
                         </tr>
                         <tr>
-                            <td><span id="ally_hp"></span><br><meter id="i_ally_hp_meter" max="100" value="10"></meter></td>
+                            <td class="c_hp"><span id="ally_hp"></span><br><meter id="i_ally_hp_meter" max="100" value="10"></meter></td>
                             <td><span id="ally_mp"></span><br><meter id="i_ally_mp_meter" max="100" value="10"></meter></td>
                         </tr>
                         <tr class="c_action">
