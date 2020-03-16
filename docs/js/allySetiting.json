@@ -39,6 +39,16 @@
                 "type": "[HEAL]",
                 "amount": 50
             }
+        },
+        {
+            "name": "ディア",
+            "limitedTimes": 99,
+            "effect":
+            {
+                "type": "[HEAL]",
+                "amount": 22,
+                "costMp": 12
+            }
         }]
     }]
 }

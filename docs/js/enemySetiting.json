@@ -5,8 +5,8 @@
         "isAlive": true,
         "max_hp": 20,
         "cur_hp": 20,
-        "max_mp": 19,
-        "cur_mp": 19,
+        "max_mp": 23,
+        "cur_mp": 23,
         "resistance":
         {
             "アギ": "weak",
