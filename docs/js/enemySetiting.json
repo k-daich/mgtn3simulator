@@ -21,10 +21,10 @@
         },
         "skills": [
         {
-            "name": "ひっかき",
-            "probability": 30,
+            "probability": 10,
             "effect":
             {
+                "name": "ひっかき",
                 "type": "[ATTACK]",
                 "damage": 12,
                 "hitRate": 70,
@@ -32,20 +32,20 @@
             }
         },
         {
-            "name": "スクカジャ",
-            "probability": 10,
+            "probability": 80,
             "effect":
             {
+                "name": "スクカジャ",
                 "type": "[HEAL]",
                 "amount": 50,
                 "costMp": 12
             }
         },
         {
-            "name": "通常攻撃",
-            "probability": 60,
+            "probability": 10,
             "effect":
             {
+                "name": "通常攻撃",
                 "type": "[ATTACK]",
                 "damage": 8,
                 "hitRate": 90,

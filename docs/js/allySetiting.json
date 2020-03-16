@@ -21,10 +21,10 @@
         },
         "skills": [
         {
-            "name": "通常攻撃",
             "limitedTimes": 999,
             "effect":
             {
+                "name": "通常攻撃",
                 "type": "[ATTACK]",
                 "damage": 8,
                 "hitRate": 80,
@@ -32,19 +32,19 @@
             }
         },
         {
-            "name": "回復薬",
             "limitedTimes": 1,
             "effect":
             {
+                "name": "回復薬",
                 "type": "[HEAL]",
                 "amount": 50
             }
         },
         {
-            "name": "ディア",
             "limitedTimes": 99,
             "effect":
             {
+                "name": "ディア",
                 "type": "[HEAL]",
                 "amount": 22,
                 "costMp": 12

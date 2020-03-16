@@ -87,7 +87,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
+            alert('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values: ' + turnPress);
         },
 
         half: function() {
@@ -105,7 +105,7 @@ function TurnPressManager() {
                     turnPress[index] = TURN_PRESS_STATUS.NONE;
                 }
             }
-            loggingObj('TurnPressManager.decrementTurn[HALF] Error : Unexpected turnPress values', turnPress);
+            alert('TurnPressManager.decrementTurn[HALF] Error : Unexpected turnPress values: ' + turnPress);
         },
 
         two: function() {
@@ -119,7 +119,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            loggingObj('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values', turnPress);
+            alert('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values: ' + turnPress);
         },
 
         all: function() {
@@ -145,8 +145,7 @@ function SimulateEvent() {
     }
 
     this.attack = function(src, dest, skill_index) {
-        var skill = src.skills[skill_index];
-        var effect = skill.effect;
+        var effect = src.skills[skill_index].effect;
         var doneDamage = null;
         // hitした場合
         if (privateFunc.isHit(effect.hitRate)) {
@@ -155,21 +154,21 @@ function SimulateEvent() {
                 // logging('SimulateEvent.attack', 'criticaled');
                 trnPrssMngr.decrementTurn.half();
                 doneDamage = effect.damage * 1.5;
-                smltrLggr.appendSimulateLog(effect.type + ' Critical Hit! ' + src.name + 'は' + dest.name + 'に' + skill.name + '。' + doneDamage + 'のダメージを与えた。');
+                smltrLggr.appendSimulateLog(effect.type + ' Critical Hit! ' + src.name + 'は' + dest.name + 'に' + effect.name + '。' + doneDamage + 'のダメージを与えた。');
             }
             // critical hitしなかった場合
             else {
                 // logging('SimulateEvent.attack', 'hitted');
                 trnPrssMngr.decrementTurn.one();
                 doneDamage = effect.damage;
-                smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + skill.name + '。' + doneDamage + 'のダメージを与えた。');
+                smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + effect.name + '。' + doneDamage + 'のダメージを与えた。');
             }
         }
         // hitしなかった場合
         else {
             trnPrssMngr.decrementTurn.two();
             doneDamage = 0;
-            smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + skill.name + '。' + 'だが攻撃は外れた。');
+            smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + effect.name + '。' + 'だが攻撃は外れた。');
         }
 
         var beDeadflg = false;
@@ -183,19 +182,9 @@ function SimulateEvent() {
         }
         // HTML上に反映する
         var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
-        logging('replace hp : id', hpId);
+        // logging('replace hp : id', hpId);
         replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
         if (beDeadflg) smltrEvnt.printDiedLog(dest);
-    }
-
-    this.decrementMp = function(member, costMp) {
-        if (0 < member.cur_mp - costMp) {
-            member.cur_mp - costMp;
-            return true;
-        } else {
-            smltrLggr.appendSimulateLog('[Not Enough MP]  ' + decrementMp.name + 'はMPが足りない！');
-            return false;
-        }
     }
 
     this.printDiedLog = function(member) {
@@ -232,7 +221,7 @@ function SimulateEvent() {
     this.actEnemyTurn = function() {
         // プレスターン状態を初期化（敵側）
         trnPrssMngr.initTurn(enemyParty);
-        logging('actEnemyTurn', 'init');
+        // logging('actEnemyTurn', 'init');
         // プレスターンが終了するまで繰り返す
         while (!trnPrssMngr.isTurnEnd()) {
             // logging('enemy is not end of turn', trnPrssMngr.isTurnEnd());
@@ -254,6 +243,28 @@ function SimulateEvent() {
             }
 
         }
+    }
+
+    this.decrementMp = function(effect, mem) {
+        if (!effect.costMp) {
+            // costMpが未定義、もしくは0の場合は何もしない
+        }
+        // costMpが足りている場合はMPを減算したうえでアクションを実行する
+        else if (privateFunc.isEnoughMp(effect.costMp, this)) {
+            mem.cur_mp = mem.cur_mp - effect.costMp;
+            if (mem.isAlly) {
+                replace('#ally_mp', mem.cur_mp + ' / ' + mem.max_mp);
+            } else {
+                replace('#enemy_mp', mem.cur_mp + ' / ' + mem.max_mp);
+            }
+        }
+        // MPが足りていない場合はシミュレートログに出力して何もしない
+        else {
+            smltrLggr.appendSimulateLog(_effect.type + ' ' + mem.name + 'は' + effect.name + 'をしようとしたがMPが足りない！');
+            trnPrssMngr.decrementTurn.one();
+            return;
+        }
+
     }
 }
 const smltrEvnt = new SimulateEvent();
@@ -293,10 +304,10 @@ function SimulateLogger() {
     }
 
     privateFunc.appendLifeGageLog = function(turnNum, lifeGageInfoArray) {
-        loggingObj('privateFunc.appendLifeGageLog', lifeGageInfoArray)
+        // loggingObj('privateFunc.appendLifeGageLog', lifeGageInfoArray)
         privateFunc.append('<span class="c_simulateLog_details">');
-        for (var info of lifeGageInfoArray) {
-            $('#i_simulateLog').append('<span style="background-color:' + privateFunc.getBgColor(info.isAlly) + '">' + info.name + ' <meter id="i_enemyHpMeterLog" max="' + info.max_hp + '" value="' + info.cur_hp + '"></meter></span>');
+        for (var lifeGageInfo of lifeGageInfoArray) {
+            $('#i_simulateLog').append('<span style="background-color:' + privateFunc.getBgColor(lifeGageInfo.isAlly) + '">' + lifeGageInfo.name + ' <meter id="i_enemyHpMeterLog" max="' + lifeGageInfo.max_hp + '" value="' + lifeGageInfo.cur_hp + '"></meter></span>');
         }
         privateFunc.append('</span></span><br/>');
         $("#i_simulateLog").scrollTop($("#i_simulateLog")[0].scrollHeight);
@@ -378,12 +389,18 @@ var AllyMember = function(allyMem) {
         smltrEvnt.appendTurnPressLog(true);
         // logging('AllyMember.action', 'start');
         var _effect = this.skills[skill_index].effect;
-        // MPが足りていない場合はシミュレートログに出力して何もしない
-        if (privateFunc.isEnoughMp(_effect.costMp, this)) {
+        if (!_effect.costMp) {
+            // costMpが未定義、もしくは0の場合は何もしない
+        }
+        // costMpが足りている場合はMPを減算したうえでアクションを実行する
+        else if (privateFunc.isEnoughMp(_effect.costMp, this)) {
             this.cur_mp = this.cur_mp - _effect.costMp;
             replace('#ally_mp', this.cur_mp + ' / ' + this.max_mp);
-        } else {
-            smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + this.skills[skill_index].name + 'をしようとしたがMPが足りない！');
+        }
+        // MPが足りていない場合はシミュレートログに出力して何もしない
+        else {
+            smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'をしようとしたがMPが足りない！');
+            trnPrssMngr.decrementTurn.one();
             return;
         }
 
@@ -403,11 +420,11 @@ var AllyMember = function(allyMem) {
                 trnPrssMngr.decrementTurn.one();
                 // HTML上に反映する
                 replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
-                smltrLggr.appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + this.skills[skill_index].name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+                smltrLggr.appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
 
             default:
-                logging('actionAlly', 'Error. _effect.type is not found.');
+                alert('actionAlly : Error. _effect.type is not found.');
                 break;
         }
     }
@@ -417,11 +434,9 @@ var AllyMember = function(allyMem) {
      * ※足りている場合は減算する
      */
     privateFunc.isEnoughMp = function(costMp, mem) {
-        logging('isEnoughMp', 'costMp : ' + costMp + 'cur_mp : ' + mem.cur_mp);
+        // logging('isEnoughMp', 'costMp : ' + costMp + 'cur_mp : ' + mem.cur_mp);
         // costMpが未定義の場合は何もせずtrueを返す
-        if (!costMp) return true;
-        logging('isEnoughMp : judge', costMp < mem.cur_mp);
-        logging('isEnoughMp : judge', costMp < mem.cur_mp);
+        // logging('isEnoughMp : judge', costMp < mem.cur_mp);
         return costMp < mem.cur_mp;
     }
 
@@ -451,11 +466,19 @@ function EnemyMember(enemyMem) {
         var skill_index = privateFunc.decideEnemyAction(this.skills);
         logging('action', 'skill_index : ' + skill_index);
         var _effect = this.skills[skill_index].effect;
-        // MPが足りていない場合はシミュレートログに出力して何もしない
-        if (privateFunc.isEnoughMp(_effect.costMp)) {
+
+        if (!_effect.costMp) {
+            // costMpが未定義、もしくは0の場合は何もしない
+        }
+        // costMpが足りている場合はMPを減算したうえでアクションを実行する
+        else if (privateFunc.isEnoughMp(_effect.costMp, this)) {
             this.cur_mp = this.cur_mp - _effect.costMp;
-        } else {
-            smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + this.skills[skill_index].name + 'をしようとしたがMPが足りない！');
+            replace('#enemy_mp', this.cur_mp + ' / ' + this.max_mp);
+        }
+        // MPが足りていない場合はシミュレートログに出力して何もしない
+        else {
+            smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'をしようとしたがMPが足りない！');
+            trnPrssMngr.decrementTurn.one();
             return;
         }
 
@@ -475,7 +498,7 @@ function EnemyMember(enemyMem) {
                 trnPrssMngr.decrementTurn.one();
                 // HTML上に反映する
                 replace('#enemy_hp', this.cur_hp + ' / ' + this.max_hp);
-                smltrLggr.appendSimulateLog(ENEMY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + this.skills[skill_index].name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+                smltrLggr.appendSimulateLog(ENEMY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
             default:
                 logging('actionEnemy', 'Error. _effect.type is not found.');
@@ -487,11 +510,11 @@ function EnemyMember(enemyMem) {
      * MPが足りているか
      * ※足りている場合は減算する
      */
-    privateFunc.isEnoughMp = function(costMp) {
+    privateFunc.isEnoughMp = function(costMp, mem) {
         logging('isEnoughMp', costMp);
         // costMpが未定義の場合は何もせずtrueを返す
         if (!costMp) return true;
-        return costMp < this.cur_mp;
+        return costMp < mem.cur_mp;
     }
 
     /**
@@ -599,7 +622,7 @@ function battleReset() {
     replaceAttr('#i_enemy_mp_meter', 'value', enemyParty[0].cur_mp);
 
     for (var i = 0; i < enemyParty[0].skills.length; i++) {
-        replace('#enemy_skill-' + i, enemyParty[0].skills[i].name);
+        replace('#enemy_skill-' + i, enemyParty[0].skills[i].effect.name);
         replace('#enemy_skill-select-probability-' + i, enemyParty[0].skills[i].probability);
     }
 
@@ -612,7 +635,7 @@ function battleReset() {
     replaceAttr('#i_ally_mp_meter', 'value', allyParty[0].cur_mp);
 
     for (var i = 0; i < allyParty[0].skills.length; i++) {
-        replace('#ally_skill-' + i, allyParty[0].skills[i].name);
+        replace('#ally_skill-' + i, allyParty[0].skills[i].effect.name);
         replace('#ally_skill-limitedTimes-' + i, allyParty[0].skills[i].limitedTimes);
     }
 }
