@@ -21,7 +21,7 @@
         },
         "skills": [
         {
-            "probability": 10,
+            "probability": 20,
             "effect":
             {
                 "name": "ひっかき",
@@ -32,7 +32,7 @@
             }
         },
         {
-            "probability": 80,
+            "probability": 15,
             "effect":
             {
                 "name": "スクカジャ",
@@ -42,7 +42,7 @@
             }
         },
         {
-            "probability": 10,
+            "probability": 65,
             "effect":
             {
                 "name": "通常攻撃",

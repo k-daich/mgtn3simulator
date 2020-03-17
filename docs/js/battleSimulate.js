@@ -42,7 +42,7 @@ function TurnPressManager() {
         for (var mem of party) {
             if (mem.isAlive()) actionableMemberNum++;
         }
-        loggingObj('TurnPressManager.countInitTurn', actionableMemberNum);
+        // loggingObj('TurnPressManager.countInitTurn', actionableMemberNum);
         return actionableMemberNum;
     }
 
@@ -68,7 +68,7 @@ function TurnPressManager() {
     this.initTurn = function(party) {
         turnPress = Array(privateFunc.countInitTurn(party));
         turnPress.fill(TURN_PRESS_STATUS.ONE);
-        loggingObj('TurnPressManager.init', turnPress);
+        // loggingObj('TurnPressManager.init', turnPress);
     }
 
     this.isTurnEnd = function(party) {
@@ -87,6 +87,7 @@ function TurnPressManager() {
                     return;
                 }
             }
+            loggingObj()
             alert('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values: ' + turnPress);
         },
 
@@ -171,11 +172,15 @@ function SimulateEvent() {
             smltrLggr.appendSimulateLog(effect.type + ' ' + src.name + 'は' + dest.name + 'に' + effect.name + '。' + 'だが攻撃は外れた。');
         }
 
+        loggingObj('action : src', src);
+        loggingObj('action : dest', dest);
+        logging('dest.cur_hp : ' + dest.cur_hp + ' , doneDamage : ' + doneDamage);
         var beDeadflg = false;
         if (0 < dest.cur_hp - doneDamage) {
             // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
             dest.cur_hp = dest.cur_hp - doneDamage;
         } else {
+            // loggingObj('attack : dest', dest)
             // 減算した結果が0以下の場合は0を現在HPに設定する
             dest.cur_hp = 0;
             beDeadflg = true;
@@ -413,14 +418,16 @@ var AllyMember = function(allyMem) {
                 if (this.max_hp < this.cur_hp + _effect.amount) {
                     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
                     this.cur_hp = this.max_hp;
+                    alert('MAX HEALED : cur_hp' + this.cur_hp);
                 } else {
                     // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
                     this.cur_hp = this.cur_hp + _effect.amount;
+                    alert('HEALED : cur_hp' + this.cur_hp);
                 }
                 trnPrssMngr.decrementTurn.one();
                 // HTML上に反映する
                 replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
-                smltrLggr.appendSimulateLog(ALLY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+                smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
 
             default:
@@ -498,10 +505,10 @@ function EnemyMember(enemyMem) {
                 trnPrssMngr.decrementTurn.one();
                 // HTML上に反映する
                 replace('#enemy_hp', this.cur_hp + ' / ' + this.max_hp);
-                smltrLggr.appendSimulateLog(ENEMY_SKILL_TYPE.HEAL + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+                smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
             default:
-                logging('actionEnemy', 'Error. _effect.type is not found.');
+                alert('actionEnemy', 'Error. _effect.type is not found.');
                 break;
         }
     }
@@ -693,6 +700,8 @@ function allyActionButtonMdown(event) {
                 battleReset();
                 return;
             }
+            // プレスターン状態を初期化（味方側）
+            trnPrssMngr.initTurn(allyParty);
             smltrLggr.appendTurnPartition(turnNum);
             smltrLggr.switchActionSide(true);
             turnNum++;
