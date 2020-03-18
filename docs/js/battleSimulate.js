@@ -87,7 +87,6 @@ function TurnPressManager() {
                     return;
                 }
             }
-            loggingObj()
             alert('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values: ' + turnPress);
         },
 
@@ -120,7 +119,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            alert('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values: ' + turnPress);
+            alert('TurnPressManager.decrementTurn[TWO] Error : Unexpected turnPress values: ' + turnPress);
         },
 
         all: function() {
@@ -190,6 +189,25 @@ function SimulateEvent() {
         // logging('replace hp : id', hpId);
         replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
         if (beDeadflg) smltrEvnt.printDiedLog(dest);
+    }
+
+    this.heal = function(src, dest, skill_index) {
+        var _effect = src.skills[skill_index].effect;
+        if (dest.max_hp < dest.cur_hp + _effect.amount) {
+            // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
+            dest.cur_hp = dest.max_hp;
+            // alert('MAX HEALED : cur_hp' + this.cur_hp);
+        } else {
+            // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
+            dest.cur_hp = dest.cur_hp + _effect.amount;
+            // alert('HEALED : cur_hp' + this.cur_hp);
+        }
+        trnPrssMngr.decrementTurn.one();
+        // HTML上に反映する
+        var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
+        alert('HEALED : cur_hp' + dest.cur_hp);
+        replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
+        smltrLggr.appendSimulateLog(_effect.type + ' ' + src.name + 'は' + _effect.name + 'を' + dest.name + 'に唱えた。' + _effect.amount + '回復した。');
     }
 
     this.printDiedLog = function(member) {
@@ -269,7 +287,6 @@ function SimulateEvent() {
             trnPrssMngr.decrementTurn.one();
             return;
         }
-
     }
 }
 const smltrEvnt = new SimulateEvent();
@@ -345,14 +362,7 @@ function SimulateLogger() {
 const smltrLggr = new SimulateLogger();
 
 function Member() {
-    // name = member.name;
-    // max_hp = member.max_hp;
-    // cur_hp = member.cur_hp;
-    // max_mp = member.max_mp;
-    // cur_mp = member.cur_mp;
-    // resistance = member.resistance;
-    // skills = member.skills;
-    // // this.isAlly = true;
+    // TODO: 共通fieldをここに宣言したい
 }
 
 Member.prototype = {
@@ -360,7 +370,7 @@ Member.prototype = {
      * 生きているかを返す
      */
     isAlive: function() {
-        if (this.cur_hp == 0) {
+        if (this.cur_hp <= 0) {
             return false;
         }
         return true;
@@ -415,19 +425,21 @@ var AllyMember = function(allyMem) {
                 break;
 
             case ALLY_SKILL_TYPE.HEAL:
-                if (this.max_hp < this.cur_hp + _effect.amount) {
-                    // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
-                    this.cur_hp = this.max_hp;
-                    alert('MAX HEALED : cur_hp' + this.cur_hp);
-                } else {
-                    // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
-                    this.cur_hp = this.cur_hp + _effect.amount;
-                    alert('HEALED : cur_hp' + this.cur_hp);
-                }
-                trnPrssMngr.decrementTurn.one();
-                // HTML上に反映する
-                replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
-                smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+                smltrEvnt.heal(this, allyParty[0], skill_index);
+
+                // if (this.max_hp < this.cur_hp + _effect.amount) {
+                //     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
+                //     this.cur_hp = this.max_hp;
+                //     // alert('MAX HEALED : cur_hp' + this.cur_hp);
+                // } else {
+                //     // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
+                //     this.cur_hp = this.cur_hp + _effect.amount;
+                //     // alert('HEALED : cur_hp' + this.cur_hp);
+                // }
+                // trnPrssMngr.decrementTurn.one();
+                // // HTML上に反映する
+                // replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
+                // smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
 
             default:
@@ -495,17 +507,18 @@ function EnemyMember(enemyMem) {
                 break;
 
             case ENEMY_SKILL_TYPE.HEAL:
-                if (this.max_hp < this.cur_hp + _effect.amount) {
-                    // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
-                    this.cur_hp = this.max_hp;
-                } else {
-                    // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
-                    this.cur_hp = this.cur_hp + _effect.amount;
-                }
-                trnPrssMngr.decrementTurn.one();
-                // HTML上に反映する
-                replace('#enemy_hp', this.cur_hp + ' / ' + this.max_hp);
-                smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
+                smltrEvnt.heal(this, enemyParty[0], skill_index);
+                // if (this.max_hp < this.cur_hp + _effect.amount) {
+                //     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
+                //     this.cur_hp = this.max_hp;
+                // } else {
+                //     // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
+                //     this.cur_hp = this.cur_hp + _effect.amount;
+                // }
+                // trnPrssMngr.decrementTurn.one();
+                // // HTML上に反映する
+                // replace('#enemy_hp', this.cur_hp + ' / ' + this.max_hp);
+                // smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
             default:
                 alert('actionEnemy', 'Error. _effect.type is not found.');
@@ -723,6 +736,7 @@ function AutoBattle() {
     var isAutoRunning = false;
 
     privateFunc.actOneAlly = function() {
+    	logging('actOneAlly', 'start');
         $('#ally_skill-0 button').click();
     }
 
