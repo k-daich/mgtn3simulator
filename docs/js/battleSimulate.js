@@ -87,7 +87,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            alert('TurnPressManager.decrementTurn[ONE] Error : Unexpected turnPress values: ' + turnPress);
+            debugAlert('TurnPressManager.decrementTurn[ONE]' , 'Error : Unexpected turnPress values: ' + turnPress);
         },
 
         half: function() {
@@ -105,7 +105,7 @@ function TurnPressManager() {
                     turnPress[index] = TURN_PRESS_STATUS.NONE;
                 }
             }
-            alert('TurnPressManager.decrementTurn[HALF] Error : Unexpected turnPress values: ' + turnPress);
+            debugAlert('TurnPressManager.decrementTurn[HALF]' , 'Error : Unexpected turnPress values: ' + turnPress);
         },
 
         two: function() {
@@ -119,7 +119,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            alert('TurnPressManager.decrementTurn[TWO] Error : Unexpected turnPress values: ' + turnPress);
+            debugAlert('TurnPressManager.decrementTurn[TWO]' , 'Error : Unexpected turnPress values: ' + turnPress);
         },
 
         all: function() {
@@ -196,16 +196,16 @@ function SimulateEvent() {
         if (dest.max_hp < dest.cur_hp + _effect.amount) {
             // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
             dest.cur_hp = dest.max_hp;
-            // alert('MAX HEALED : cur_hp' + this.cur_hp);
+            // debugAlert('MAX HEALED' , 'cur_hp' + this.cur_hp);
         } else {
             // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
             dest.cur_hp = dest.cur_hp + _effect.amount;
-            // alert('HEALED : cur_hp' + this.cur_hp);
+            // debugAlert('HEALED' , 'cur_hp' + this.cur_hp);
         }
         trnPrssMngr.decrementTurn.one();
         // HTML上に反映する
         var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
-        alert('HEALED : cur_hp' + dest.cur_hp);
+        debugAlert('HEALED' , 'cur_hp' + dest.cur_hp);
         replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
         smltrLggr.appendSimulateLog(_effect.type + ' ' + src.name + 'は' + _effect.name + 'を' + dest.name + 'に唱えた。' + _effect.amount + '回復した。');
     }
@@ -430,11 +430,11 @@ var AllyMember = function(allyMem) {
                 // if (this.max_hp < this.cur_hp + _effect.amount) {
                 //     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
                 //     this.cur_hp = this.max_hp;
-                //     // alert('MAX HEALED : cur_hp' + this.cur_hp);
+                //     // debugAlert('MAX HEALED' , 'cur_hp' + this.cur_hp);
                 // } else {
                 //     // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
                 //     this.cur_hp = this.cur_hp + _effect.amount;
-                //     // alert('HEALED : cur_hp' + this.cur_hp);
+                //     // debugAlert('HEALED' , 'cur_hp' + this.cur_hp);
                 // }
                 // trnPrssMngr.decrementTurn.one();
                 // // HTML上に反映する
@@ -443,7 +443,7 @@ var AllyMember = function(allyMem) {
                 break;
 
             default:
-                alert('actionAlly : Error. _effect.type is not found.');
+                debugAlert('actionAlly' + 'Error. _effect.type is not found.');
                 break;
         }
     }
@@ -521,7 +521,7 @@ function EnemyMember(enemyMem) {
                 // smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
             default:
-                alert('actionEnemy', 'Error. _effect.type is not found.');
+                debugAlert('actionEnemy', 'Error. _effect.type is not found.');
                 break;
         }
     }
@@ -547,7 +547,7 @@ function EnemyMember(enemyMem) {
             totalProbability = totalProbability + skills[skill_index].probability;
             if (rndmNum <= totalProbability) return skill_index;
         }
-        alert('Error @ battolesSimulate.js decideEnemyAction() rndmNum : ' + rndmNum + ',totalProbability : ' + totalProbability);
+        debugAlert('Error decideEnemyAction' , 'totalProbability is less than 100 [rndmNum] : ' + rndmNum + ',[totalProbability] : ' + totalProbability);
     }
 }
 EnemyMember.prototype = new Member();
@@ -622,7 +622,6 @@ function battleReset() {
     turnNum = 1;
 
     removeAll_AnimateGlow();
-    trnPrssMngr.initTurn(allyParty);
     smltrLggr.appendBattlePartition();
     smltrLggr.appendTurnPartition(turnNum);
     smltrLggr.switchActionSide(true);
@@ -658,6 +657,8 @@ function battleReset() {
         replace('#ally_skill-' + i, allyParty[0].skills[i].effect.name);
         replace('#ally_skill-limitedTimes-' + i, allyParty[0].skills[i].limitedTimes);
     }
+    // ターンプレスの初期化を行う（味方が先制であること前提でallyPartyからターンを生成する）
+    trnPrssMngr.initTurn(allyParty);
 }
 
 function initMemsStatus() {
@@ -733,11 +734,11 @@ function allyActionButtonMdown(event) {
 
 function AutoBattle() {
     var privateFunc = {};
-    var isAutoRunning = false;
+    var intervalId = null;
 
     privateFunc.actOneAlly = function() {
-    	logging('actOneAlly', 'start');
-        $('#ally_skill-0 button').click();
+        logging('actOneAlly', 'start');
+        $('#ally_skill-limitedTimes-0').click();
     }
 
     /**
@@ -745,13 +746,12 @@ function AutoBattle() {
      */
     this.switchMode = function(event) {
         if (this.textContent == 'start') {
-            isAutoRunning = true;
+            logging('switchMode', 'start');
             replace('#i_auto-battle-btn', 'end');
-            while (isAutoRunning) {
-                setInterval(1000, privateFunc.actOneAlly());
-            }
+            intervalId = setInterval(privateFunc.actOneAlly, 500);
         } else {
-            isAutoRunning = false;
+            logging('switchMode', 'end');
+            clearInterval(intervalId);
             replace('#i_auto-battle-btn', 'start');
         }
     }
