@@ -87,7 +87,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            debugAlert('TurnPressManager.decrementTurn[ONE]' , 'Error : Unexpected turnPress values: ' + turnPress);
+            debugAlert('TurnPressManager.decrementTurn[ONE]', 'Error : Unexpected turnPress values: ' + turnPress);
         },
 
         half: function() {
@@ -105,7 +105,7 @@ function TurnPressManager() {
                     turnPress[index] = TURN_PRESS_STATUS.NONE;
                 }
             }
-            debugAlert('TurnPressManager.decrementTurn[HALF]' , 'Error : Unexpected turnPress values: ' + turnPress);
+            debugAlert('TurnPressManager.decrementTurn[HALF]', 'Error : Unexpected turnPress values: ' + turnPress);
         },
 
         two: function() {
@@ -119,7 +119,7 @@ function TurnPressManager() {
                     return;
                 }
             }
-            debugAlert('TurnPressManager.decrementTurn[TWO]' , 'Error : Unexpected turnPress values: ' + turnPress);
+            debugAlert('TurnPressManager.decrementTurn[TWO]', 'Error : Unexpected turnPress values: ' + turnPress);
         },
 
         all: function() {
@@ -205,7 +205,7 @@ function SimulateEvent() {
         trnPrssMngr.decrementTurn.one();
         // HTML上に反映する
         var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
-        debugAlert('HEALED' , 'cur_hp' + dest.cur_hp);
+        debugAlert('HEALED', 'cur_hp' + dest.cur_hp);
         replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
         smltrLggr.appendSimulateLog(_effect.type + ' ' + src.name + 'は' + _effect.name + 'を' + dest.name + 'に唱えた。' + _effect.amount + '回復した。');
     }
@@ -426,20 +426,6 @@ var AllyMember = function(allyMem) {
 
             case ALLY_SKILL_TYPE.HEAL:
                 smltrEvnt.heal(this, allyParty[0], skill_index);
-
-                // if (this.max_hp < this.cur_hp + _effect.amount) {
-                //     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
-                //     this.cur_hp = this.max_hp;
-                //     // debugAlert('MAX HEALED' , 'cur_hp' + this.cur_hp);
-                // } else {
-                //     // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
-                //     this.cur_hp = this.cur_hp + _effect.amount;
-                //     // debugAlert('HEALED' , 'cur_hp' + this.cur_hp);
-                // }
-                // trnPrssMngr.decrementTurn.one();
-                // // HTML上に反映する
-                // replace('#ally_hp', this.cur_hp + ' / ' + this.max_hp);
-                // smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
 
             default:
@@ -508,17 +494,6 @@ function EnemyMember(enemyMem) {
 
             case ENEMY_SKILL_TYPE.HEAL:
                 smltrEvnt.heal(this, enemyParty[0], skill_index);
-                // if (this.max_hp < this.cur_hp + _effect.amount) {
-                //     // 加算した結果が最大HPより大きい場合は最大HPを現在HPに設定する
-                //     this.cur_hp = this.max_hp;
-                // } else {
-                //     // 加算した結果が最大HP以下の場合は加算した結果を現在HPに設定する
-                //     this.cur_hp = this.cur_hp + _effect.amount;
-                // }
-                // trnPrssMngr.decrementTurn.one();
-                // // HTML上に反映する
-                // replace('#enemy_hp', this.cur_hp + ' / ' + this.max_hp);
-                // smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'を' + this.name + 'に唱えた。' + _effect.amount + '回復した。');
                 break;
             default:
                 debugAlert('actionEnemy', 'Error. _effect.type is not found.');
@@ -547,7 +522,7 @@ function EnemyMember(enemyMem) {
             totalProbability = totalProbability + skills[skill_index].probability;
             if (rndmNum <= totalProbability) return skill_index;
         }
-        debugAlert('Error decideEnemyAction' , 'totalProbability is less than 100 [rndmNum] : ' + rndmNum + ',[totalProbability] : ' + totalProbability);
+        debugAlert('Error decideEnemyAction', 'totalProbability is less than 100 [rndmNum] : ' + rndmNum + ',[totalProbability] : ' + totalProbability);
     }
 }
 EnemyMember.prototype = new Member();
@@ -738,7 +713,11 @@ function AutoBattle() {
 
     privateFunc.actOneAlly = function() {
         logging('actOneAlly', 'start');
-        $('#ally_skill-limitedTimes-0').click();
+        if (allyParty[0].cur_hp < 13) {
+            $('#ally_skill-limitedTimes-1').click();
+        } else {
+            $('#ally_skill-limitedTimes-0').click();
+        }
     }
 
     /**

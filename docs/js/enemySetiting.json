@@ -27,8 +27,8 @@
                 "name": "ひっかき",
                 "type": "[ATTACK]",
                 "damage": 12,
-                "hitRate": 70,
-                "criticalRate": 10
+                "hitRate": 80,
+                "criticalRate": 30
             }
         },
         {
