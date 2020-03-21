@@ -601,36 +601,42 @@ function battleReset() {
     smltrLggr.appendTurnPartition(turnNum);
     smltrLggr.switchActionSide(true);
     initMemsStatus();
+    memberHtmlBuilder.buildAllyParty(allyParty);
+    memberHtmlBuilder.buildEnemyParty(enemyParty);
     loggingObj('battleReset : enemyParty', enemyParty);
     loggingObj('battleReset : allyParty', allyParty);
 
     replace('#battleResult_count_win', battleResult.count_win);
     replace('#battleResult_count_lose', battleResult.count_lose);
 
-    replace('#enemy_name', enemyParty[0].name);
-    replace('#enemy_hp', enemyParty[0].cur_hp + ' / ' + enemyParty[0].max_hp);
-    replace('#enemy_mp', enemyParty[0].cur_mp + ' / ' + enemyParty[0].max_mp);
-    replaceAttr('#i_enemy_hp_meter', 'max', enemyParty[0].max_hp);
-    replaceAttr('#i_enemy_hp_meter', 'value', enemyParty[0].cur_hp);
-    replaceAttr('#i_enemy_mp_meter', 'max', enemyParty[0].max_mp);
-    replaceAttr('#i_enemy_mp_meter', 'value', enemyParty[0].cur_mp);
+    for (var memIndex in enemyParty) {
+        replace('#enemy_' + memIndex + '_name', enemyParty[memIndex].name);
+        replace('#enemy_' + memIndex + '_hp', enemyParty[memIndex].cur_hp + ' / ' + enemyParty[memIndex].max_hp);
+        replace('#enemy_' + memIndex + '_mp', enemyParty[memIndex].cur_mp + ' / ' + enemyParty[memIndex].max_mp);
+        replaceAttr('#i_enemy_' + memIndex + '_hp_meter', 'max', enemyParty[memIndex].max_hp);
+        replaceAttr('#i_enemy_' + memIndex + '_hp_meter', 'value', enemyParty[memIndex].cur_hp);
+        replaceAttr('#i_enemy_' + memIndex + '_mp_meter', 'max', enemyParty[memIndex].max_mp);
+        replaceAttr('#i_enem_' + memIndex + '_mp_meter', 'value', enemyParty[memIndex].cur_mp);
 
-    for (var i = 0; i < enemyParty[0].skills.length; i++) {
-        replace('#enemy_skill-' + i, enemyParty[0].skills[i].effect.name);
-        replace('#enemy_skill-select-probability-' + i, enemyParty[0].skills[i].probability);
+        for (var skillIndex in enemyParty[memIndex].skills) {
+            replace('#enemy_skill-' + skillIndex, enemyParty[memIndex].skills[skillIndex].effect.name);
+            replace('#enemy_skill-select-probability-' + skillIndex, enemyParty[memIndex].skills[skillIndex].probability);
+        }
     }
 
-    replace('#ally_name', allyParty[0].name);
-    replace('#ally_hp', allyParty[0].cur_hp + ' / ' + allyParty[0].max_hp);
-    replace('#ally_mp', allyParty[0].cur_mp + ' / ' + allyParty[0].max_mp);
-    replaceAttr('#i_ally_hp_meter', 'max', allyParty[0].max_hp);
-    replaceAttr('#i_ally_hp_meter', 'value', allyParty[0].cur_hp);
-    replaceAttr('#i_ally_mp_meter', 'max', allyParty[0].max_mp);
-    replaceAttr('#i_ally_mp_meter', 'value', allyParty[0].cur_mp);
+    for (var memIndex in allyParty) {
+        replace('#ally_' + memIndex + '_name', allyParty[memIndex].name);
+        replace('#ally_' + memIndex + '_hp', allyParty[memIndex].cur_hp + ' / ' + allyParty[memIndex].max_hp);
+        replace('#ally_' + memIndex + '_mp', allyParty[memIndex].cur_mp + ' / ' + allyParty[memIndex].max_mp);
+        replaceAttr('#i_ally_' + memIndex + '_hp_meter', 'max', allyParty[memIndex].max_hp);
+        replaceAttr('#i_ally_' + memIndex + '_hp_meter', 'value', allyParty[memIndex].cur_hp);
+        replaceAttr('#i_ally_' + memIndex + '_mp_meter', 'max', allyParty[memIndex].max_mp);
+        replaceAttr('#i_ally_' + memIndex + '_mp_meter', 'value', allyParty[memIndex].cur_mp);
 
-    for (var i = 0; i < allyParty[0].skills.length; i++) {
-        replace('#ally_skill-' + i, allyParty[0].skills[i].effect.name);
-        replace('#ally_skill-limitedTimes-' + i, allyParty[0].skills[i].limitedTimes);
+        for (var skillIndex in allyParty[memIndex].skills) {
+            replace('#ally_skill-' + skillIndex, allyParty[memIndex].skills[skillIndex].effect.name);
+            replace('#ally_skill-limitedTimes-' + skillIndex, allyParty[memIndex].skills[skillIndex].limitedTimes);
+        }
     }
     // ターンプレスの初期化を行う（味方が先制であること前提でallyPartyからターンを生成する）
     trnPrssMngr.initTurn(allyParty);

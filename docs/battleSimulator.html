@@ -34,6 +34,66 @@
         console.log('[' + processName + '] ');
         console.dir(object);
     }
+
+    /**
+     * パーティメンバーのHTML部を動的生成する
+     */
+    function MemberHtmlBuilder() {
+        // 味方のパーティを動的生成する
+        this.buildAllyParty = function(allyParty) {
+            allyParty.forEach((mem, memIndex) => {
+                var skillAreaHtml = '';
+                for (var skill_index in mem.skills) {
+                    skillAreaHtml = skillAreaHtml +
+                        '<tr class="c_ally-skill">\
+                            <td id="ally_skill-' + skill_index + '"></td>\
+                            <td><button id="ally_skill-limitedTimes-' + skill_index + '" class="ally-action-button" skill_index="' + skill_index + '"></button></td>\
+                        </tr>';
+
+                }
+                $('#i_allyParty_box').append(
+                    '<div id="i_ally_box_' + memIndex + '" class="c_ally_box  c_common_box">\
+                        <table class="c_normal_table">\
+                            <tr>\
+                                <td id="ally_' + memIndex + '_name"></td>\
+                            </tr>\
+                            <tr>\
+                                <td class="c_hp"><span id="ally_' + memIndex + '_hp"></span><br><meter id="i_ally_' + memIndex + '_hp_meter" max="100" value="10"></meter></td>\
+                                <td><span id="ally_' + memIndex + '_mp"></span><br><meter id="i_ally_' + memIndex + '_mp_meter" max="100" value="10"></meter></td>\
+                            </tr>' + skillAreaHtml +
+                    '</table>\
+                    </div>'
+                );
+            });
+        }
+        // 敵のパーティを動的生成する
+        this.buildEnemyParty = function(enemyParty) {
+            enemyParty.forEach((mem, memIndex) => {
+                var skillAreaHtml = '';
+                for (var skill_index in mem.skills) {
+                    skillAreaHtml = skillAreaHtml +
+                        '<tr class="c_action">\
+                            <td id="enemy_skill-' + skill_index + '"></td>\
+                            <td id="enemy_skill-select-probability-' + skill_index + '"></td>\
+                        </tr>';
+                }
+                $('#i_enemyParty_box').append(
+                    '<div id="i_enemy_box_' + memIndex + '" class="c_enemy_box c_common_box">\
+                        <table class="c_normal_table">\
+                            <tr class="c_name">\
+                                <td id="enemy_' + memIndex + '_name"></td>\
+                            </tr>\
+                            <tr class="c_status">\
+                                <td class="c_hp"><span id="enemy_' + memIndex + '_hp"></span><br><meter id="i_enemy_' + memIndex + '_hp_meter" max="100" value="10"></meter></td>\
+                                <td><span id="enemy_' + memIndex + '_mp"></span><br><meter id="i_enemy_' + memIndex + '_mp_meter" max="100" value="10"></meter></td>\
+                            </tr>' + skillAreaHtml +
+                    '</table>\
+                    </div>'
+                );
+            });
+        }
+    }
+    const memberHtmlBuilder = new MemberHtmlBuilder();
     </script>
     <script type="text/javascript" src="/mgtn3simulator/js/jquery-3.4.1.js"></script>
     <script type="text/javascript" src="/mgtn3simulator/js/setToday.js"></script>
@@ -60,56 +120,10 @@
         </div>
         <div id="i_enemyParty_box_wrap" class="c_enemyParty_box_wrap c_common_party_box_wrap">
             <div id="i_enemyParty_box" class="c_enemyParty_box">
-                <div id="i_enemy_box" class="c_enemy_box c_common_box">
-                    <table class="c_normal_table">
-                        <tr class="c_name">
-                            <td id="enemy_name"></td>
-                        </tr>
-                        <tr class="c_status">
-                            <td class="c_hp"><span id="enemy_hp"></span><br><meter id="i_enemy_hp_meter" max="100" value="10"></meter></td>
-                            <td><span id="enemy_mp"></span><br><meter id="i_enemy_mp_meter" max="100" value="10"></meter></td>
-                        </tr>
-                        <tr class="c_action">
-                            <td id="enemy_skill-0"></td>
-                            <td id="enemy_skill-select-probability-0"></td>
-                        </tr>
-                        <tr class="c_action">
-                            <td id="enemy_skill-1"></td>
-                            <td id="enemy_skill-select-probability-1"></td>
-                        </tr>
-                        <tr class="c_action">
-                            <td id="enemy_skill-2"></td>
-                            <td id="enemy_skill-select-probability-2"></td>
-                        </tr>
-                    </table>
-                </div>
             </div>
         </div>
         <div id="i_allyParty_box_wrap" class="c_allyParty_box_wrap c_common_party_box_wrap">
             <div id="i_allyParty_box" class="c_allyParty_box">
-                <div id="i_ally_box" class="c_ally_box  c_common_box">
-                    <table class="c_normal_table">
-                        <tr>
-                            <td id="ally_name"></td>
-                        </tr>
-                        <tr>
-                            <td class="c_hp"><span id="ally_hp"></span><br><meter id="i_ally_hp_meter" max="100" value="10"></meter></td>
-                            <td><span id="ally_mp"></span><br><meter id="i_ally_mp_meter" max="100" value="10"></meter></td>
-                        </tr>
-                        <tr class="c_ally-skill">
-                            <td id="ally_skill-0"></td>
-                            <td><button id="ally_skill-limitedTimes-0" class="ally-action-button btn-partial-line" skill_index="0"></button></td>
-                        </tr>
-                        <tr class="c_ally-skill">
-                            <td id="ally_skill-1"></td>
-                            <td><button id="ally_skill-limitedTimes-1" class="ally-action-button" skill_index="1"></button></td>
-                        </tr>
-                        <tr class="c_ally-skill">
-                            <td id="ally_skill-2"></td>
-                            <td><button id="ally_skill-limitedTimes-2" class="ally-action-button" skill_index="2"></button></td>
-                        </tr>
-                    </table>
-                </div>
             </div>
         </div>
         <div class="c_simulate-mode">
