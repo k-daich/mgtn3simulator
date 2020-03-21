@@ -21,7 +21,8 @@
         },
         "skills": [
         {
-            "limitedTimes": 999,
+            "limitTimes": "無限",
+            "remainingTimes": "無限",
             "effect":
             {
                 "name": "通常攻撃",
@@ -32,7 +33,8 @@
             }
         },
         {
-            "limitedTimes": 1,
+            "limitTimes": 1,
+            "remainingTimes": 1,
             "effect":
             {
                 "name": "回復薬",
@@ -41,7 +43,8 @@
             }
         },
         {
-            "limitedTimes": 99,
+            "limitTimes": 99,
+            "remainingTimes": 99,
             "effect":
             {
                 "name": "ディア",

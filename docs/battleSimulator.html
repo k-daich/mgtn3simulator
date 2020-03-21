@@ -51,6 +51,7 @@
                         </tr>';
 
                 }
+                $('#i_allyParty_box').empty();
                 $('#i_allyParty_box').append(
                     '<div id="i_ally_box_' + memIndex + '" class="c_ally_box  c_common_box">\
                         <table class="c_normal_table">\
@@ -64,6 +65,8 @@
                     '</table>\
                     </div>'
                 );
+                // allyのアクションボタンにイベントリスナーを付与
+                $('.ally-action-button').on('click', allyActionButtonMdown);
             });
         }
         // 敵のパーティを動的生成する
@@ -77,6 +80,7 @@
                             <td id="enemy_skill-select-probability-' + skill_index + '"></td>\
                         </tr>';
                 }
+                $('#i_enemyParty_box').empty();
                 $('#i_enemyParty_box').append(
                     '<div id="i_enemy_box_' + memIndex + '" class="c_enemy_box c_common_box">\
                         <table class="c_normal_table">\

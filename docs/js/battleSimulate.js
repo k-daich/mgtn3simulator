@@ -394,6 +394,12 @@ var AllyMember = function(allyMem) {
     this.resistance = allyMem.resistance;
     this.skills = allyMem.skills;
     this.isAlly = true;
+    // skillsの各要素にインデックスのフィールドを設定
+    (function() {
+        allyMem.skills.forEach(function(skill, index) {
+            skill.index = index;
+        });
+    })();
 
     var privateFunc = {};
 
@@ -415,9 +421,12 @@ var AllyMember = function(allyMem) {
         // MPが足りていない場合はシミュレートログに出力して何もしない
         else {
             smltrLggr.appendSimulateLog(_effect.type + ' ' + this.name + 'は' + _effect.name + 'をしようとしたがMPが足りない！');
-            trnPrssMngr.decrementTurn.one();
+            // allyMemberでMP足りない場合は何もしないで良い
+            //// trnPrssMngr.decrementTurn.one();
             return;
         }
+        // スキル使用制限回数を減算する
+        privateFunc.decrementRemainingTimes(this.skills[skill_index]);
 
         switch (_effect.type) {
             case ALLY_SKILL_TYPE.ATTACK:
@@ -432,6 +441,23 @@ var AllyMember = function(allyMem) {
                 debugAlert('actionAlly' + 'Error. _effect.type is not found.');
                 break;
         }
+    }
+
+    /**
+     * 行動回数に制限がある場合は行動回数をデクリメントする
+     * ※"-"は無制限という意なので何もしない
+     */
+    privateFunc.decrementRemainingTimes = function(skill) {
+        loggingObj('decrementRemainingTimes', skill);
+        if (skill.remainingTimes == "無限") {
+            logging('skill.remainingTimes', 'judged 無限');
+            // 無制限の場合は何もしない
+            return;
+        }
+        logging('skill.remainingTimes', 'before : ' + skill.remainingTimes);
+        skill.remainingTimes--;
+        logging('skill.remainingTimes', 'after : ' + skill.remainingTimes);
+        replace('#ally_skill-limitedTimes-' + skill.index, skill.remainingTimes);
     }
 
     /**
@@ -547,12 +573,8 @@ $.ajax({
                 // loggingObj('ajaxResult : ally', data);
                 data.party.forEach(member => allyParty.push(new AllyMember(member)));
                 // loggingObj('ajaxResult : allyParty', allyParty);
-
+                // 戦闘設定の初期化を実施する
                 battleReset();
-                // allyのアクションボタンにイベントリスナーを付与
-                $('.ally-action-button').on('click', allyActionButtonMdown);
-                // AutoBattleボタンにイベントリスナーを付与
-                $('#i_auto-battle-btn').on('click', autoBattle.switchMode);
             },
             // 通信失敗時の処理
             function() {
@@ -635,7 +657,7 @@ function battleReset() {
 
         for (var skillIndex in allyParty[memIndex].skills) {
             replace('#ally_skill-' + skillIndex, allyParty[memIndex].skills[skillIndex].effect.name);
-            replace('#ally_skill-limitedTimes-' + skillIndex, allyParty[memIndex].skills[skillIndex].limitedTimes);
+            replace('#ally_skill-limitedTimes-' + skillIndex, allyParty[memIndex].skills[skillIndex].limitTimes);
         }
     }
     // ターンプレスの初期化を行う（味方が先制であること前提でallyPartyからターンを生成する）
@@ -652,6 +674,10 @@ function initMemsStatus() {
     allyParty.forEach(function(allyMem) {
         allyMem.cur_hp = allyMem.max_hp;
         allyMem.cur_mp = allyMem.max_mp;
+        // スキルの使用制限回数をリセット
+        for (var skill of allyMem.skills) {
+            skill.remainingTimes = skill.limitTimes;
+        }
     });
 }
 
