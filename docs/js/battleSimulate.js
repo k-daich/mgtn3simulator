@@ -187,7 +187,7 @@ function SimulateEvent() {
         // HTML上に反映する
         var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
         // logging('replace hp : id', hpId);
-        replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
+        replace(hpId, dest.cur_hp + '/' + dest.max_hp);
         if (beDeadflg) smltrEvnt.printDiedLog(dest);
     }
 
@@ -206,7 +206,7 @@ function SimulateEvent() {
         // HTML上に反映する
         var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
         debugAlert('HEALED', 'cur_hp' + dest.cur_hp);
-        replace(hpId, dest.cur_hp + ' / ' + dest.max_hp);
+        replace(hpId, dest.cur_hp + '/' + dest.max_hp);
         smltrLggr.appendSimulateLog(_effect.type + ' ' + src.name + 'は' + _effect.name + 'を' + dest.name + 'に唱えた。' + _effect.amount + '回復した。');
     }
 
@@ -276,9 +276,9 @@ function SimulateEvent() {
         else if (privateFunc.isEnoughMp(effect.costMp, this)) {
             mem.cur_mp = mem.cur_mp - effect.costMp;
             if (mem.isAlly) {
-                replace('#ally_mp', mem.cur_mp + ' / ' + mem.max_mp);
+                replace('#ally_mp', mem.cur_mp + '/' + mem.max_mp);
             } else {
-                replace('#enemy_mp', mem.cur_mp + ' / ' + mem.max_mp);
+                replace('#enemy_mp', mem.cur_mp + '/' + mem.max_mp);
             }
         }
         // MPが足りていない場合はシミュレートログに出力して何もしない
@@ -416,7 +416,7 @@ var AllyMember = function(allyMem) {
         // costMpが足りている場合はMPを減算したうえでアクションを実行する
         else if (privateFunc.isEnoughMp(_effect.costMp, this)) {
             this.cur_mp = this.cur_mp - _effect.costMp;
-            replace('#ally_mp', this.cur_mp + ' / ' + this.max_mp);
+            replace('#ally_mp', this.cur_mp + '/' + this.max_mp);
         }
         // MPが足りていない場合はシミュレートログに出力して何もしない
         else {
@@ -504,7 +504,7 @@ function EnemyMember(enemyMem) {
         // costMpが足りている場合はMPを減算したうえでアクションを実行する
         else if (privateFunc.isEnoughMp(_effect.costMp, this)) {
             this.cur_mp = this.cur_mp - _effect.costMp;
-            replace('#enemy_mp', this.cur_mp + ' / ' + this.max_mp);
+            replace('#enemy_mp', this.cur_mp + '/' + this.max_mp);
         }
         // MPが足りていない場合はシミュレートログに出力して何もしない
         else {
@@ -575,6 +575,8 @@ $.ajax({
                 // loggingObj('ajaxResult : allyParty', allyParty);
                 // 戦闘設定の初期化を実施する
                 battleReset();
+                // allyのアクションボタンにイベントリスナーを付与
+                $('#i_auto-battle-btn').on('click', autoBattle.switchMode);
             },
             // 通信失敗時の処理
             function() {
@@ -633,8 +635,8 @@ function battleReset() {
 
     for (var memIndex in enemyParty) {
         replace('#enemy_' + memIndex + '_name', enemyParty[memIndex].name);
-        replace('#enemy_' + memIndex + '_hp', enemyParty[memIndex].cur_hp + ' / ' + enemyParty[memIndex].max_hp);
-        replace('#enemy_' + memIndex + '_mp', enemyParty[memIndex].cur_mp + ' / ' + enemyParty[memIndex].max_mp);
+        replace('#enemy_' + memIndex + '_hp', enemyParty[memIndex].cur_hp + '/' + enemyParty[memIndex].max_hp);
+        replace('#enemy_' + memIndex + '_mp', enemyParty[memIndex].cur_mp + '/' + enemyParty[memIndex].max_mp);
         replaceAttr('#i_enemy_' + memIndex + '_hp_meter', 'max', enemyParty[memIndex].max_hp);
         replaceAttr('#i_enemy_' + memIndex + '_hp_meter', 'value', enemyParty[memIndex].cur_hp);
         replaceAttr('#i_enemy_' + memIndex + '_mp_meter', 'max', enemyParty[memIndex].max_mp);
@@ -648,8 +650,8 @@ function battleReset() {
 
     for (var memIndex in allyParty) {
         replace('#ally_' + memIndex + '_name', allyParty[memIndex].name);
-        replace('#ally_' + memIndex + '_hp', allyParty[memIndex].cur_hp + ' / ' + allyParty[memIndex].max_hp);
-        replace('#ally_' + memIndex + '_mp', allyParty[memIndex].cur_mp + ' / ' + allyParty[memIndex].max_mp);
+        replace('#ally_' + memIndex + '_hp', allyParty[memIndex].cur_hp + '/' + allyParty[memIndex].max_hp);
+        replace('#ally_' + memIndex + '_mp', allyParty[memIndex].cur_mp + '/' + allyParty[memIndex].max_mp);
         replaceAttr('#i_ally_' + memIndex + '_hp_meter', 'max', allyParty[memIndex].max_hp);
         replaceAttr('#i_ally_' + memIndex + '_hp_meter', 'value', allyParty[memIndex].cur_hp);
         replaceAttr('#i_ally_' + memIndex + '_mp_meter', 'max', allyParty[memIndex].max_mp);

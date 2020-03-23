@@ -63,18 +63,6 @@ body {
     background: #402566;
 }
 
-.c_normal_table {
-    border-style: solid;
-    padding: 0px 10px;
-    text-align: center;
-}
-
-.c_normal_table th,
-td {
-    border-style: none;
-    padding: 3px 0px;
-}
-
 .c_total_result {
     position: absolute;
     top: 5vh;
@@ -82,13 +70,47 @@ td {
 }
 
 .c_common_party_box_wrap {
-    /*width : 100vw;*/
+    display: inline-block;
+    text-align: center;
+    width: 100vw;
+    margin: 3vh auto;
+}
+
+.c_enemyParty_box_wrap {
+    top: 10vh;
+}
+
+.c_normal_table {
+    border-style: solid;
+    padding: 0px 5px;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+}
+
+.c_normal_table th,
+td {
+    border-style: none;
+    padding: 2px 0px;
+}
+
+.c_common-skill td {
+    font-size: 0.7rem;
+    padding: 1px 0px;
+}
+
+meter {
+    width: 8vw;
+    height: 1.5vh;
 }
 
 .c_common_box {
-    margin: 5vh auto;
-    width: 40vw;
+    display: inline-block;
     height: 25vh;
+}
+
+.c_ally_box {
+    width: 20vw;
 }
 
 .c_name {
@@ -96,6 +118,7 @@ td {
 }
 
 @keyframes glow {
+
     0%,
     100% {
         opacity: 0;
@@ -113,29 +136,31 @@ td {
 }
 
 .c_simulate-mode {
-    position : absolute;
-    top : 15vh;
-    right : 4vw;
+    position: absolute;
+    top: 15vh;
+    right: 4vw;
 }
 
 .ally-action-button {
-  display: inline-block;
-  padding: 0.1em 1em;
-  height : 100%;
-  width : 100%;
-  text-decoration: none;
-  background: #668ad8;/*ボタン色*/
-  color: #4868ad;/*ボタン色より暗く*/
-  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.29);
-  border-bottom: solid 3px #627295;
-  border-radius: 3px;
-  font-weight: bold;
-  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+    display: inline-block;
+    padding: 0.1em 1em;
+    height: 100%;
+    width: 100%;
+    text-decoration: none;
+    background: #668ad8;
+    /*ボタン色*/
+    color: #4868ad;
+    /*ボタン色より暗く*/
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.29);
+    border-bottom: solid 3px #627295;
+    border-radius: 3px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .ally-action-button:activate {
-  -webkit-transform: translateY(4px);
-  transform: translateY(4px);
-  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.2);
-  border-bottom: none;
+    -webkit-transform: translateY(4px);
+    transform: translateY(4px);
+    box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.2);
+    border-bottom: none;
 }

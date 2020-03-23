@@ -39,19 +39,28 @@
      * パーティメンバーのHTML部を動的生成する
      */
     function MemberHtmlBuilder() {
-        // 味方のパーティを動的生成する
+        var privateFunc = {};
+
+        privateFunc.appndEmptyBox = function(boxIndex) {
+            // 試験的にemptyボックスを追加してみる
+            $('#i_allyParty_box').append(
+                '<div id="i_ally_box_' + boxIndex + '" class="c_ally_box c_common_box"><table class="c_normal_table"><td>empty</td></table></div>');
+        }
+
+        /**
+         * 味方のパーティを動的生成する
+         */
         this.buildAllyParty = function(allyParty) {
+            $('#i_allyParty_box').empty();
             allyParty.forEach((mem, memIndex) => {
                 var skillAreaHtml = '';
                 for (var skill_index in mem.skills) {
                     skillAreaHtml = skillAreaHtml +
-                        '<tr class="c_ally-skill">\
+                        '<tr class="c_common-skill">\
                             <td id="ally_skill-' + skill_index + '"></td>\
                             <td><button id="ally_skill-limitedTimes-' + skill_index + '" class="ally-action-button" skill_index="' + skill_index + '"></button></td>\
                         </tr>';
-
                 }
-                $('#i_allyParty_box').empty();
                 $('#i_allyParty_box').append(
                     '<div id="i_ally_box_' + memIndex + '" class="c_ally_box  c_common_box">\
                         <table class="c_normal_table">\
@@ -68,19 +77,23 @@
                 // allyのアクションボタンにイベントリスナーを付与
                 $('.ally-action-button').on('click', allyActionButtonMdown);
             });
+            var boxIndex = 1;
+            privateFunc.appndEmptyBox(boxIndex);
         }
-        // 敵のパーティを動的生成する
+        /**
+         * 敵のパーティを動的生成する
+         */
         this.buildEnemyParty = function(enemyParty) {
+            $('#i_enemyParty_box').empty();
             enemyParty.forEach((mem, memIndex) => {
                 var skillAreaHtml = '';
                 for (var skill_index in mem.skills) {
                     skillAreaHtml = skillAreaHtml +
-                        '<tr class="c_action">\
+                        '<tr class="c_common-skill">\
                             <td id="enemy_skill-' + skill_index + '"></td>\
                             <td id="enemy_skill-select-probability-' + skill_index + '"></td>\
                         </tr>';
                 }
-                $('#i_enemyParty_box').empty();
                 $('#i_enemyParty_box').append(
                     '<div id="i_enemy_box_' + memIndex + '" class="c_enemy_box c_common_box">\
                         <table class="c_normal_table">\
@@ -95,7 +108,13 @@
                     </div>'
                 );
             });
+            privateFunc.appndEnemyEmptyBox(1);
         }
+        privateFunc.appndEnemyEmptyBox = function(boxIndex) {
+            $('#i_enemyParty_box').append(
+                '<div id="i_enemy_box_' + boxIndex + '" class="c_enemy_box c_common_box"><table class="c_normal_table"><td>empty</td></table></div>');
+        }
+
     }
     const memberHtmlBuilder = new MemberHtmlBuilder();
     </script>
