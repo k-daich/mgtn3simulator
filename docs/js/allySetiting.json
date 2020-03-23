@@ -2,6 +2,7 @@
     "party": [
     {
         "name": "人修羅",
+        "memberIndex" : 0,
         "isAlive": true,
         "max_hp": 24,
         "cur_hp": 24,

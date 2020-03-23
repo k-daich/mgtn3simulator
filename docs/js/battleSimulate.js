@@ -144,6 +144,39 @@ function SimulateEvent() {
         return Math.random() * 101 < criticalRate;
     }
 
+    /**
+     * destMemのHPをdecrementNumだけ減らす
+     * HPが0以下になる場合は死亡ログも表示する
+     */
+    privateFunc.decrementHp = function(destMem, decrementNum) {
+        var beDeadflg = false;
+        if (0 < destMem.cur_hp - decrementNum) {
+            // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
+            destMem.cur_hp = destMem.cur_hp - decrementNum;
+        } else {
+            // loggingObj('attack : dest', dest)
+            // 減算した結果が0以下の場合は0を現在HPに設定する
+            destMem.cur_hp = 0;
+            beDeadflg = true;
+        }
+        // HTML上に反映する
+        // 減らす対象が味方の場合
+        if (destMem.isAlly) {
+            replace('#ally_' + destMem.memberIndex + '_hp', destMem.cur_hp + '/' + destMem.max_hp);
+            // replaceAttr('#i_ally_' + destMem.memberIndex + '_hp_meter', 'max', destMem.max_hp);
+            replaceAttr('#i_ally_' + destMem.memberIndex + '_hp_meter', 'value', destMem.cur_hp);
+        }
+        // 減らす対象が敵の場合
+        else {
+            replace('#enemy_' + destMem.memberIndex + '_hp', destMem.cur_hp + '/' + destMem.max_hp);
+            // replaceAttr('#i_enemy_' + destMem.memberIndex + '_hp_meter', 'max', destMem.max_hp);
+            replaceAttr('#i_enemy_' + destMem.memberIndex + '_hp_meter', 'value', destMem.cur_hp);
+        }
+
+        // 死んだ場合は死亡ログを表示する
+        if (beDeadflg) smltrEvnt.printDiedLog(destMem);
+    }
+
     this.attack = function(src, dest, skill_index) {
         var effect = src.skills[skill_index].effect;
         var doneDamage = null;
@@ -174,21 +207,7 @@ function SimulateEvent() {
         loggingObj('action : src', src);
         loggingObj('action : dest', dest);
         logging('dest.cur_hp : ' + dest.cur_hp + ' , doneDamage : ' + doneDamage);
-        var beDeadflg = false;
-        if (0 < dest.cur_hp - doneDamage) {
-            // 減算した結果が0より大きい場合は減算した結果を現在HPに設定する
-            dest.cur_hp = dest.cur_hp - doneDamage;
-        } else {
-            // loggingObj('attack : dest', dest)
-            // 減算した結果が0以下の場合は0を現在HPに設定する
-            dest.cur_hp = 0;
-            beDeadflg = true;
-        }
-        // HTML上に反映する
-        var hpId = dest.isAlly ? '#ally_hp' : '#enemy_hp';
-        // logging('replace hp : id', hpId);
-        replace(hpId, dest.cur_hp + '/' + dest.max_hp);
-        if (beDeadflg) smltrEvnt.printDiedLog(dest);
+        privateFunc.decrementHp(dest, doneDamage);
     }
 
     this.heal = function(src, dest, skill_index) {
@@ -268,24 +287,27 @@ function SimulateEvent() {
         }
     }
 
-    this.decrementMp = function(effect, mem) {
-        if (!effect.costMp) {
-            // costMpが未定義、もしくは0の場合は何もしない
-        }
-        // costMpが足りている場合はMPを減算したうえでアクションを実行する
-        else if (privateFunc.isEnoughMp(effect.costMp, this)) {
-            mem.cur_mp = mem.cur_mp - effect.costMp;
-            if (mem.isAlly) {
-                replace('#ally_mp', mem.cur_mp + '/' + mem.max_mp);
-            } else {
-                replace('#enemy_mp', mem.cur_mp + '/' + mem.max_mp);
-            }
-        }
-        // MPが足りていない場合はシミュレートログに出力して何もしない
-        else {
-            smltrLggr.appendSimulateLog(_effect.type + ' ' + mem.name + 'は' + effect.name + 'をしようとしたがMPが足りない！');
-            trnPrssMngr.decrementTurn.one();
-            return;
+    /**
+     * MPが足りているか
+     * ※足りている場合は減算する
+     */
+    this.isEnoughMp = function(costMp, mem) {
+        // logging('isEnoughMp', 'costMp : ' + costMp + 'cur_mp : ' + mem.cur_mp);
+        // costMpが未定義の場合は何もせずtrueを返す
+        // logging('isEnoughMp : judge', costMp < mem.cur_mp);
+        return costMp < mem.cur_mp;
+    }
+
+    this.decrementMp = function(costMp, mem) {
+    	mem.setCur_mp(mem.cur_mp - costMp);
+        if (mem.isAlly) {
+            replace('#ally_' + mem.memberIndex + '_mp', mem.cur_mp + '/' + mem.max_mp);
+            replaceAttr('#i_ally_' + mem.memberIndex + '_mp_meter', 'max', mem.max_mp);
+            replaceAttr('#i_ally_' + mem.memberIndex + '_mp_meter', 'value', mem.cur_mp);
+        } else {
+            replace('#enemy_' + mem.memberIndex + '_mp', mem.cur_mp + '/' + mem.max_mp);
+            replaceAttr('#i_enemy_' + mem.memberIndex + '_mp_meter', 'max', mem.max_mp);
+            replaceAttr('#i_enemy_' + mem.memberIndex + '_mp_meter', 'value', mem.cur_mp);
         }
     }
 }
@@ -387,6 +409,7 @@ Member.prototype = {
 
 var AllyMember = function(allyMem) {
     this.name = allyMem.name;
+    this.memberIndex = allyMem.memberIndex;
     this.max_hp = allyMem.max_hp;
     this.cur_hp = allyMem.cur_hp;
     this.max_mp = allyMem.max_mp;
@@ -394,6 +417,7 @@ var AllyMember = function(allyMem) {
     this.resistance = allyMem.resistance;
     this.skills = allyMem.skills;
     this.isAlly = true;
+
     // skillsの各要素にインデックスのフィールドを設定
     (function() {
         allyMem.skills.forEach(function(skill, index) {
@@ -402,6 +426,12 @@ var AllyMember = function(allyMem) {
     })();
 
     var privateFunc = {};
+
+    this.setCur_mp = function(mp) {
+    	logging('this.setCur_mp', 'before : ' + this.cur_mp);
+    	this.cur_mp = mp;
+    	logging('this.setCur_mp', 'after : ' + this.cur_mp);
+    }
 
     /**
      * 行動する
@@ -414,9 +444,10 @@ var AllyMember = function(allyMem) {
             // costMpが未定義、もしくは0の場合は何もしない
         }
         // costMpが足りている場合はMPを減算したうえでアクションを実行する
-        else if (privateFunc.isEnoughMp(_effect.costMp, this)) {
-            this.cur_mp = this.cur_mp - _effect.costMp;
-            replace('#ally_mp', this.cur_mp + '/' + this.max_mp);
+        else if (smltrEvnt.isEnoughMp(_effect.costMp, this)) {
+            smltrEvnt.decrementMp(_effect.costMp, this);
+            // this.cur_mp = this.cur_mp - _effect.costMp;
+            // replace('#ally_' + this.memberIndex + '_mp', this.cur_mp + '/' + this.max_mp);
         }
         // MPが足りていない場合はシミュレートログに出力して何もしない
         else {
@@ -448,35 +479,24 @@ var AllyMember = function(allyMem) {
      * ※"-"は無制限という意なので何もしない
      */
     privateFunc.decrementRemainingTimes = function(skill) {
-        loggingObj('decrementRemainingTimes', skill);
+        // loggingObj('decrementRemainingTimes', skill);
         if (skill.remainingTimes == "無限") {
-            logging('skill.remainingTimes', 'judged 無限');
+            // logging('skill.remainingTimes', 'judged 無限');
             // 無制限の場合は何もしない
             return;
         }
-        logging('skill.remainingTimes', 'before : ' + skill.remainingTimes);
+        // logging('skill.remainingTimes', 'before : ' + skill.remainingTimes);
         skill.remainingTimes--;
-        logging('skill.remainingTimes', 'after : ' + skill.remainingTimes);
+        // logging('skill.remainingTimes', 'after : ' + skill.remainingTimes);
         replace('#ally_skill-limitedTimes-' + skill.index, skill.remainingTimes);
     }
-
-    /**
-     * MPが足りているか
-     * ※足りている場合は減算する
-     */
-    privateFunc.isEnoughMp = function(costMp, mem) {
-        // logging('isEnoughMp', 'costMp : ' + costMp + 'cur_mp : ' + mem.cur_mp);
-        // costMpが未定義の場合は何もせずtrueを返す
-        // logging('isEnoughMp : judge', costMp < mem.cur_mp);
-        return costMp < mem.cur_mp;
-    }
-
 }
 AllyMember.prototype = new Member();
 
 function EnemyMember(enemyMem) {
     // this.prototype = new Member(enemyMem);
     this.name = enemyMem.name;
+    this.memberIndex = enemyMem.memberIndex;
     this.max_hp = enemyMem.max_hp;
     this.cur_hp = enemyMem.cur_hp;
     this.max_mp = enemyMem.max_mp;
@@ -504,7 +524,7 @@ function EnemyMember(enemyMem) {
         // costMpが足りている場合はMPを減算したうえでアクションを実行する
         else if (privateFunc.isEnoughMp(_effect.costMp, this)) {
             this.cur_mp = this.cur_mp - _effect.costMp;
-            replace('#enemy_mp', this.cur_mp + '/' + this.max_mp);
+            replace('#enemy_' + this.memberIndex + '_mp', this.cur_mp + '/' + this.max_mp);
         }
         // MPが足りていない場合はシミュレートログに出力して何もしない
         else {
@@ -697,10 +717,6 @@ function allyActionButtonMdown(event) {
         // 二度押し防止用フラグ：立てる
         allyActionButtonMdown_runningFlg = true;
         removeAll_AnimateGlow();
-        // 使用回数をデクリメントする
-        var dcrmntNum = parseInt(this.textContent, 10) - 1;
-        replace('#' + this.id, dcrmntNum);
-
 
         // 効果の反映を行う
         // id値の末尾番号から

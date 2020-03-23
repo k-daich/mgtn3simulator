@@ -2,6 +2,7 @@
     "party": [
     {
         "name": "ガキ",
+        "memberIndex" : 0,
         "isAlive": true,
         "max_hp": 20,
         "cur_hp": 20,
