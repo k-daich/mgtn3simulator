@@ -299,7 +299,7 @@ function SimulateEvent() {
     }
 
     this.decrementMp = function(costMp, mem) {
-    	mem.setCur_mp(mem.cur_mp - costMp);
+        mem.setCur_mp(mem.cur_mp - costMp);
         if (mem.isAlly) {
             replace('#ally_' + mem.memberIndex + '_mp', mem.cur_mp + '/' + mem.max_mp);
             replaceAttr('#i_ally_' + mem.memberIndex + '_mp_meter', 'max', mem.max_mp);
@@ -428,9 +428,9 @@ var AllyMember = function(allyMem) {
     var privateFunc = {};
 
     this.setCur_mp = function(mp) {
-    	logging('this.setCur_mp', 'before : ' + this.cur_mp);
-    	this.cur_mp = mp;
-    	logging('this.setCur_mp', 'after : ' + this.cur_mp);
+        logging('this.setCur_mp', 'before : ' + this.cur_mp);
+        this.cur_mp = mp;
+        logging('this.setCur_mp', 'after : ' + this.cur_mp);
     }
 
     /**
@@ -595,8 +595,6 @@ $.ajax({
                 // loggingObj('ajaxResult : allyParty', allyParty);
                 // 戦闘設定の初期化を実施する
                 battleReset();
-                // allyのアクションボタンにイベントリスナーを付与
-                $('#i_auto-battle-btn').on('click', autoBattle.switchMode);
             },
             // 通信失敗時の処理
             function() {
@@ -663,7 +661,7 @@ function battleReset() {
         replaceAttr('#i_enem_' + memIndex + '_mp_meter', 'value', enemyParty[memIndex].cur_mp);
 
         for (var skillIndex in enemyParty[memIndex].skills) {
-            replace('#enemy_skill-' + skillIndex, enemyParty[memIndex].skills[skillIndex].effect.name);
+            // replace('#enemy_skill-' + skillIndex, enemyParty[memIndex].skills[skillIndex].effect.name);
             replace('#enemy_skill-select-probability-' + skillIndex, enemyParty[memIndex].skills[skillIndex].probability);
         }
     }
@@ -678,7 +676,7 @@ function battleReset() {
         replaceAttr('#i_ally_' + memIndex + '_mp_meter', 'value', allyParty[memIndex].cur_mp);
 
         for (var skillIndex in allyParty[memIndex].skills) {
-            replace('#ally_skill-' + skillIndex, allyParty[memIndex].skills[skillIndex].effect.name);
+            // replace('#ally_skill-' + skillIndex, allyParty[memIndex].skills[skillIndex].effect.name);
             replace('#ally_skill-limitedTimes-' + skillIndex, allyParty[memIndex].skills[skillIndex].limitTimes);
         }
     }
@@ -756,33 +754,3 @@ function allyActionButtonMdown(event) {
         allyActionButtonMdown_runningFlg = false;
     }
 };
-
-function AutoBattle() {
-    var privateFunc = {};
-    var intervalId = null;
-
-    privateFunc.actOneAlly = function() {
-        logging('actOneAlly', 'start');
-        if (allyParty[0].cur_hp < 13) {
-            $('#ally_skill-limitedTimes-1').click();
-        } else {
-            $('#ally_skill-limitedTimes-0').click();
-        }
-    }
-
-    /**
-     * allyアクションボタン押下時の処理を実装する
-     */
-    this.switchMode = function(event) {
-        if (this.textContent == 'start') {
-            logging('switchMode', 'start');
-            replace('#i_auto-battle-btn', 'end');
-            intervalId = setInterval(privateFunc.actOneAlly, 500);
-        } else {
-            logging('switchMode', 'end');
-            clearInterval(intervalId);
-            replace('#i_auto-battle-btn', 'start');
-        }
-    }
-}
-const autoBattle = new AutoBattle();
