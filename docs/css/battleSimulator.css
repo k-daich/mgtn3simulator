@@ -158,6 +158,11 @@ meter {
     text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
 }
 
+.ally-action-button[text()=='0'] {
+    /*ボタン色*/
+    color: #333;
+}
+
 .ally-action-button:activate {
     -webkit-transform: translateY(4px);
     transform: translateY(4px);

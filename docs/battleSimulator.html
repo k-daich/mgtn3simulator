@@ -57,7 +57,7 @@
                 for (var skill_index in mem.skills) {
                     skillAreaHtml = skillAreaHtml +
                         '<tr class="c_common-skill">\
-                            <td id="ally_skill-' + skill_index + '"></td>\
+                            <td id="ally_skill-' + skill_index + '">' + mem.skills[skill_index].effect.name + '</td>\
                             <td><button id="ally_skill-limitedTimes-' + skill_index + '" class="ally-action-button" skill_index="' + skill_index + '"></button></td>\
                         </tr>';
                 }
@@ -90,7 +90,7 @@
                 for (var skill_index in mem.skills) {
                     skillAreaHtml = skillAreaHtml +
                         '<tr class="c_common-skill">\
-                            <td id="enemy_skill-' + skill_index + '"></td>\
+                            <td id="enemy_skill-' + skill_index + '">' + mem.skills[skill_index].effect.name + '</td>\
                             <td id="enemy_skill-select-probability-' + skill_index + '"></td>\
                         </tr>';
                 }
@@ -158,6 +158,7 @@
         </div>
     </main>
     <script type="text/javascript" src="/mgtn3simulator/js/battleSimulate.js"></script>
+    <script type="text/javascript" src="/mgtn3simulator/js/autoBattle.js"></script>
 </body>
 
 </html>

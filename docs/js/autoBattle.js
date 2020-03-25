@@ -2,17 +2,24 @@ function AutoBattle() {
     var privateFunc = {};
     var intervalId = null;
 
-    privateFunc.actOneAlly = function() {
+    privateFunc.getSkillIndex = function(memIndex, skillName) {
+        var _skills = allyParty[memIndex].skills;
+        for(var _resultIndex in _skills) {
+            if (_skills[_resultIndex].effect.name == skillName) return _resultIndex;
+        }
+        debugAlert('getSkillIndex', 'Not Found skill name : ' + skillName);
     }
 
     privateFunc.actOneAlly = function() {
         logging('actOneAlly', 'start');
+        var skillIndex = null;
         if (allyParty[0].cur_hp < 13 &&
             allyParty[0].skills[1].remainingTimes != 0) {
-            $('.ally-skill[text="回復薬"]').click();
+            skillIndex = privateFunc.getSkillIndex(0, '回復薬');
         } else {
-            $('#ally_skill-limitedTimes-0').click();
+            skillIndex = privateFunc.getSkillIndex(0, "通常攻撃");
         }
+        $('#ally_skill-limitedTimes-' + skillIndex).click();
     }
 
     /**
