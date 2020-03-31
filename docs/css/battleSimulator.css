@@ -82,6 +82,7 @@ body {
 
 .c_normal_table {
     border-style: solid;
+    /*border-spacing: 5px 0px;*/
     padding: 0px 5px;
     text-align: center;
     height: 100%;
@@ -91,12 +92,13 @@ body {
 .c_normal_table th,
 td {
     border-style: none;
-    padding: 2px 0px;
+    padding: 0px 0px;
 }
 
 .c_common-skill td {
     font-size: 0.7rem;
-    padding: 1px 0px;
+    line-height: 0;
+    padding: 0px 0px;
 }
 
 meter {
@@ -168,4 +170,8 @@ meter {
     transform: translateY(4px);
     box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.2);
     border-bottom: none;
+}
+
+.c_allyActionSelect_box {
+    width : 30vw;
 }
